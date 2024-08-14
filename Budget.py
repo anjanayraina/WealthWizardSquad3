@@ -1,6 +1,5 @@
 class Budget:
     current_id = 1
-
     def __init__(self, category, amount, time_period):
         self.category = category
         self.amount = amount
