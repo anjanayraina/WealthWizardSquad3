@@ -1,19 +1,15 @@
+from datetime import datetime, timedelta
+
 class Budget:
-    current_id = 1
-    def __init__(self, category, amount, time_period):
+
+    def __init__(self, budget_id, user_id, category, amount, start_date, end_date):
+        self.budget_id = budget_id
+        self.user_id = user_id
         self.category = category
         self.amount = amount
-        self.time_period = time_period
-        self.id = Budget.current_id
-        Budget.current_id+=1
-
-    def __str__(self):
-        return f"Category: {self.category}, Amount: {self.amount}, Time Period: {self.time_period}"
-    def get_amount(self):
-        return self.amount
-    def get_cateogery(self):
-        return self.category
-    def get_time_period(self):
-        return self.time_period
-    def get_id(self):
-        return self.id
+        self.start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        self.end_date = datetime.strptime(end_date, '%Y-%m-%d')
+    def __repr__(self):
+        return (f"Budget(budget_id={self.budget_id}, user_id={self.user_id}, category={self.category}, "
+                f"amount={self.amount}, start_date={self.start_date.strftime('%Y-%m-%d')}, "
+                f"end_date={self.end_date.strftime('%Y-%m-%d')})")

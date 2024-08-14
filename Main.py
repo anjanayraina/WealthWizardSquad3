@@ -4,33 +4,34 @@ import sys
 from BudgetManager import BudgetManager
 
 
-def main():
+# Example usage
+if __name__ == "__main__":
     manager = BudgetManager()
 
     while True:
-        print("Budget Management CLI")
-        print("1. Create a new budget")
-        print("2. Edit an existing budget")
-        print("3. Delete a budget")
-        print("4. View all active budgets")
-        print("5. Exit")
-
-        choice = input("Select an option (1-5): ")
+        print("\nBudget Manager")
+        print("1. Create Budget")
+        print("2. Update Budget")
+        print("3. Delete Budget")
+        print("4. Retrieve Budget")
+        print("5. List Budgets")
+        print("6. Raise Alert")
+        print("7. Exit")
+        choice = input("Enter your choice: ")
 
         if choice == '1':
             manager.create_budget()
         elif choice == '2':
-            manager.edit_budget()
+            manager.update_budget()
         elif choice == '3':
             manager.delete_budget()
         elif choice == '4':
-            manager.view_budgets()
+            manager.get_budget()
         elif choice == '5':
-            print("Exiting the Budget Management CLI.")
-            sys.exit(0)
+            manager.list_budgets()
+        elif choice == '6':
+            manager.raise_alert()
+        elif choice == '7':
+            break
         else:
-            print("Invalid option. Please choose a number between 1 and 5.\n")
-
-
-if __name__ == "__main__":
-    main()
+            print("Invalid choice. Please try again.")
