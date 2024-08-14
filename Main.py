@@ -1,10 +1,5 @@
-# main.py
-
-import sys
 from BudgetManager import BudgetManager
 
-
-# Example usage
 if __name__ == "__main__":
     manager = BudgetManager()
 
