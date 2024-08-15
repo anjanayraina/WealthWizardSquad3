@@ -16,6 +16,11 @@ class TestBudgetManager(unittest.TestCase):
         self.assertEqual(budget.start_date, datetime(2024, 8, 1))
         self.assertEqual(budget.end_date, datetime(2024, 8, 31))
 
+    def test_create_budget_missing_budget_id(self):
+        with self.assertRaises(ValueError) as context:
+            self.manager.create_budget('', 'U001', 'Groceries', '500.0', '01-08-2024', '31-08-2024')
+        self.assertEqual(str(context.exception), "Budget ID cannot be empty.")
+
 
 if __name__ == '__main__':
     unittest.main()

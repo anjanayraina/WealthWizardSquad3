@@ -5,44 +5,40 @@ class BudgetManager:
         self.budgets = {}
 
     def create_budget(self, budget_id, user_id, category, amount, start_date, end_date):
+        if not budget_id:
+            raise ValueError("Budget ID cannot be empty.")
+
+        if not user_id:
+            raise ValueError("User ID cannot be empty.")
+
+        if not category:
+            raise ValueError("Budget category cannot be empty.")
+
+        if not amount:
+            raise ValueError("Budget amount cannot be empty.")
         try:
-            if not budget_id:
-                raise ValueError("Budget ID cannot be empty.")
+            amount = float(amount)
+            if amount <= 0:
+                raise ValueError("Amount must be greater than zero.")
+        except ValueError:
+            raise ValueError("Please enter a valid number for the amount.")
 
-            if not user_id:
-                raise ValueError("User ID cannot be empty.")
+        if not start_date:
+            raise ValueError("Start date cannot be empty.")
+        self._validate_date(start_date)
 
-            if not category:
-                raise ValueError("Budget category cannot be empty.")
+        if not end_date:
+            raise ValueError("End date cannot be empty.")
+        self._validate_date(end_date)
 
-            if not amount:
-                raise ValueError("Budget amount cannot be empty.")
-            try:
-                amount = float(amount)
-                if amount <= 0:
-                    raise ValueError("Amount must be greater than zero.")
-            except ValueError:
-                raise ValueError("Please enter a valid number for the amount.")
+        if datetime.strptime(end_date, '%d-%m-%Y') <= datetime.strptime(start_date, '%d-%m-%Y'):
+            raise ValueError("End date must be after the start date.")
 
-            if not start_date:
-                raise ValueError("Start date cannot be empty.")
-            self._validate_date(start_date)
+        if budget_id in self.budgets:
+            raise ValueError("A budget with this ID already exists.")
 
-            if not end_date:
-                raise ValueError("End date cannot be empty.")
-            self._validate_date(end_date)
-
-            if datetime.strptime(end_date, '%d-%m-%Y') <= datetime.strptime(start_date, '%d-%m-%Y'):
-                raise ValueError("End date must be after the start date.")
-
-            if budget_id in self.budgets:
-                raise ValueError("A budget with this ID already exists.")
-
-            self.budgets[budget_id] = Budget(budget_id, user_id, category, amount, start_date, end_date)
-            print(f"Budget with ID {budget_id} created successfully.")
-
-        except ValueError as e:
-            print(f"Error: {e}")
+        self.budgets[budget_id] = Budget(budget_id, user_id, category, amount, start_date, end_date)
+        print(f"Budget with ID {budget_id} created successfully.")
 
     def _validate_date(self, date_str):
         try:
