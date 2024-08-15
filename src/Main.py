@@ -1,4 +1,4 @@
-from BudgetManager import BudgetManager
+from src.BudgetManager import BudgetManager
 
 if __name__ == "__main__":
     manager = BudgetManager()
@@ -19,8 +19,8 @@ if __name__ == "__main__":
             user_id = input("Enter user ID: ")
             category = input("Enter budget category: ")
             amount = input("Enter budget amount: ")
-            start_date = input("Enter start date (YYYY-MM-DD): ")
-            end_date = input("Enter end date (YYYY-MM-DD): ")
+            start_date = input("Enter start date (DD-MM-YYYY): ")
+            end_date = input("Enter end date (DD-MM-YYYY): ")
 
             manager.create_budget(budget_id, user_id, category, amount, start_date, end_date)
         elif choice == '2':

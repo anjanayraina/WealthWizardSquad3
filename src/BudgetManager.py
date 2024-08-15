@@ -1,4 +1,4 @@
-from Budget import Budget
+from .Budget import Budget
 from datetime import datetime, timedelta
 class BudgetManager:
     def __init__(self):
@@ -32,7 +32,7 @@ class BudgetManager:
                 raise ValueError("End date cannot be empty.")
             self._validate_date(end_date)
 
-            if datetime.strptime(end_date, '%Y-%m-%d') <= datetime.strptime(start_date, '%Y-%m-%d'):
+            if datetime.strptime(end_date, '%d-%m-%Y') <= datetime.strptime(start_date, '%d-%m-%Y'):
                 raise ValueError("End date must be after the start date.")
 
             if budget_id in self.budgets:
@@ -46,9 +46,9 @@ class BudgetManager:
 
     def _validate_date(self, date_str):
         try:
-            datetime.strptime(date_str, '%Y-%m-%d')
+            datetime.strptime(date_str, '%d-%m-%Y')
         except ValueError:
-            raise ValueError("Date format must be YYYY-MM-DD.")
+            raise ValueError("Date format must be DD-MM-YYYY.")
     def update_budget(self):
         budget_id = input("Enter the budget ID to update: ")
         if budget_id not in self.budgets:
@@ -125,9 +125,5 @@ class BudgetManager:
         if datetime.strptime(end_date, '%Y-%m-%d') <= datetime.strptime(start_date, '%Y-%m-%d'):
             raise ValueError("End date must be after the start date.")
 
-    def _validate_date(self, date_str):
-        try:
-            datetime.strptime(date_str, '%Y-%m-%d')
-        except ValueError:
-            raise ValueError("Date format must be YYYY-MM-DD.")
+
 
