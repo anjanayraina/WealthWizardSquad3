@@ -21,6 +21,23 @@ class TestBudgetManager(unittest.TestCase):
             self.manager.create_budget('', 'U001', 'Groceries', '500.0', '01-08-2024', '31-08-2024')
         self.assertEqual(str(context.exception), "Budget ID cannot be empty.")
 
+    def test_create_budget_missing_user_id(self):
+        with self.assertRaises(ValueError) as context:
+            self.manager.create_budget('B001', '', 'Groceries', '500.0', '2024-08-01', '2024-08-31')
+        self.assertEqual(str(context.exception), "User ID cannot be empty.")
+
+    def test_create_budget_missing_category(self):
+        with self.assertRaises(ValueError) as context:
+            self.manager.create_budget('B001', 'U001', '', '500.0', '2024-08-01', '2024-08-31')
+        self.assertEqual(str(context.exception), "Budget category cannot be empty.")
+
+    def test_create_budget_missing_amount(self):
+        with self.assertRaises(ValueError) as context:
+            self.manager.create_budget('B001', 'U001', 'Groceries', '', '2024-08-01', '2024-08-31')
+        self.assertEqual(str(context.exception), "Budget amount cannot be empty.")
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
