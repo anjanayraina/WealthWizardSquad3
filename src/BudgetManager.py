@@ -1,10 +1,18 @@
 from .Budget import Budget
 from datetime import datetime, timedelta
+from src.exceptions import UserNotLoggedInError , BudgetAlreadyExistsError
+from src.utils import is_user_logged_in , budget_already_exists
 class BudgetManager:
     def __init__(self):
         self.budgets = {}
 
-    def create_budget(self, budget_id, user_id, category, amount, start_date, end_date):
+    def create_budget(self, budget_id, user_id, category, amount, start_date,   end_date):
+        if not is_user_logged_in(user_id):
+            raise UserNotLoggedInError("User must be logged in to create a budget")
+
+        if budget_already_exists(budget_id):
+            raise BudgetAlreadyExistsError("Budget already exists, please enter a new Budget ")
+
         if not budget_id:
             raise ValueError("Budget ID cannot be empty.")
 
@@ -120,6 +128,5 @@ class BudgetManager:
         self._validate_date(end_date)
         if datetime.strptime(end_date, '%Y-%m-%d') <= datetime.strptime(start_date, '%Y-%m-%d'):
             raise ValueError("End date must be after the start date.")
-
 
 
