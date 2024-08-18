@@ -21,7 +21,6 @@ if __name__ == "__main__":
             amount = input("Enter budget amount: ")
             start_date = input("Enter start date (DD-MM-YYYY): ")
             end_date = input("Enter end date (DD-MM-YYYY): ")
-
             manager.create_budget(budget_id, user_id, category, amount, start_date, end_date)
         elif choice == '2':
             manager.update_budget()
