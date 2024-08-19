@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
 from src import UserNotLoggedInError , BudgetAlreadyExistsError , Budget , is_user_logged_in , budget_already_exists
+from prettytable import PrettyTable
+
 class BudgetManager:
     def __init__(self):
         self.budgets = {}
@@ -97,12 +99,17 @@ class BudgetManager:
 
         print(self.budgets[budget_id])
 
+
     def list_budgets(self):
         if not self.budgets:
             print("No budgets set.")
+            # API TO CALL CREATE BUDGET.
         else:
+            table = PrettyTable()
+            table.field_names = ["Budget Id", "Category", "Amount", "Start_data", "End_date"]
             for budget in self.budgets.values():
-                print(budget)
+                table.add_row([budget.budget_id, budget.category, budget.amount, budget.start_date, budget.end_date])
+            print(table)
 
     def raise_alert(self):
         budget_id = input("Enter the budget ID to check for alerts: ")
@@ -127,5 +134,6 @@ class BudgetManager:
         self._validate_date(end_date)
         if datetime.strptime(end_date, '%Y-%m-%d') <= datetime.strptime(start_date, '%Y-%m-%d'):
             raise ValueError("End date must be after the start date.")
+
 
 
