@@ -1,8 +1,10 @@
 from src.BudgetManager import BudgetManager
 
-if __name__ == "__main__":
-    manager = BudgetManager()
 
+if __name__ == "__main__":
+
+    manager = BudgetManager()
+    manager.test_connection()
     while True:
         print("\nBudget Manager")
         print("1. Create Budget")

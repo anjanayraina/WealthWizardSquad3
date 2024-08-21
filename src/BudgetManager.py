@@ -1,13 +1,23 @@
 from datetime import datetime, timedelta
-from src import UserNotLoggedInError , BudgetAlreadyExistsError , Budget , is_user_logged_in , budget_already_exists
+from src import UserNotLoggedInError , BudgetAlreadyExistsError , Budget , is_user_logged_in , budget_already_exists , DBHelper
 from prettytable import PrettyTable
 
 class BudgetManager:
     def __init__(self):
         self.budgets = {}
-
-    def create_budget(self, budget_id, user_id, category, amount, start_date,   end_date):
-
+        self.db_helper = DBHelper(
+            user="system",
+            password="welcome123",
+            host="172.17.0.2",
+            port="1521",
+            sid="XE"
+        )
+        self.db_helper.connect()
+    def test_connection(self):
+        query = "select * from budgets"
+        result = self.db_helper.execute_query(query)
+        print(result)
+    def create_budget(self, budget_id, user_id, category, amount, start_date, end_date):
         if not budget_id:
             raise ValueError("Budget ID cannot be empty.")
 
@@ -25,8 +35,9 @@ class BudgetManager:
 
         if budget_already_exists(budget_id):
             raise BudgetAlreadyExistsError("Budget already exists, please enter a new Budget ")
+
         try:
-            amount = float(amount)
+            amount = float(amount)  # Ensure amount is a float
             if amount <= 0:
                 raise ValueError("Amount must be greater than zero.")
         except ValueError:
@@ -46,8 +57,14 @@ class BudgetManager:
         if budget_id in self.budgets:
             raise ValueError("A budget with this ID already exists.")
 
+        query = """
+            INSERT INTO budgets (budget_id, user_id, category, amount, start_date, end_date)
+            VALUES (:1, :2, :3, :4, TO_DATE(:5, 'DD-MM-YYYY'), TO_DATE(:6, 'DD-MM-YYYY'))
+        """
+        params = (budget_id, user_id, category, amount, start_date, end_date)
+        self.db_helper.execute_query(query, params)
+
         self.budgets[budget_id] = Budget(budget_id, user_id, category, amount, start_date, end_date)
-        print(f"Budget with ID {budget_id} created successfully.")
 
     def _validate_date(self, date_str):
         try:
