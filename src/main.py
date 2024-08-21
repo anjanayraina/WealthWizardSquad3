@@ -1,4 +1,4 @@
-from src.BudgetManager import BudgetManager
+from BudgetManager import BudgetManager
 
 
 if __name__ == "__main__":
