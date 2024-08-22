@@ -34,7 +34,7 @@ class DBHelper:
             else:
                 return None
         except oracledb.DatabaseError as e:
-            print(f"Error executing query: {e}")
+            print(f"A budget with this ID already exists.")
             raise
 
     def close(self):

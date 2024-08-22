@@ -66,6 +66,8 @@ class BudgetManager:
             INSERT INTO budgets (budget_id, user_id, category, amount, start_date, end_date)
             VALUES (:1, :2, :3, :4, TO_DATE(:5, 'DD-MM-YYYY'), TO_DATE(:6, 'DD-MM-YYYY'))
         """
+
+
         params = (budget_id, user_id, category, amount, start_date, end_date)
         self.db_helper.execute_query(query, params, commit=True)
 
