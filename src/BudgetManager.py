@@ -1,16 +1,20 @@
 from datetime import datetime, timedelta
 from src import UserNotLoggedInError , BudgetAlreadyExistsError , Budget , is_user_logged_in , budget_already_exists , DBHelper
 from prettytable import PrettyTable
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
+print(os.getenv("USER_SYSTEM"))
 class BudgetManager:
     def __init__(self):
         self.budgets = {}
         self.db_helper = DBHelper(
-            user="system",
-            password="welcome123",
-            host="172.17.0.2",
-            port="1521",
-            sid="XE"
+            user=os.getenv("USER_SYSTEM"),
+            password=os.getenv("PASSWORD"),
+            host=os.getenv("HOST"),
+            port = os.getenv("PORT"),
+            sid=os.getenv("SID")
         )
         self.db_helper.connect()
     def test_connection(self):
