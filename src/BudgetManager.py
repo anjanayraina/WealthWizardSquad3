@@ -63,8 +63,9 @@ class BudgetManager:
             raise ValueError("A budget with this ID already exists.")
 
         query = """
-            INSERT INTO budgets (budget_id, user_id, category, amount, start_date, end_date)
-            VALUES (:1, :2, :3, :4, TO_DATE(:5, 'DD-MM-YYYY'), TO_DATE(:6, 'DD-MM-YYYY'))
+            BEGIN
+                create_budget_proc(:1, :2, :3, :4, :5, :6);
+            END;
         """
 
 
