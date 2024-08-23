@@ -18,7 +18,7 @@ class BudgetManager:
         )
         self.db_helper.connect()
     def test_connection(self):
-        query = "select * from student"
+        query = "select * from budgets"
         result = self.db_helper.execute_query(query)
         print(result)
 
