@@ -21,7 +21,7 @@ class DBHelper:
             print(f"Error connecting to the database: {e}")
             raise
 
-    def execute_query(self, query, params=None, commit=False):
+    def execute_query(self, query, params=None, commit=True):
         if self.cursor is None:
             raise ValueError("Cursor is not initialized. Call connect() first.")
         try:
