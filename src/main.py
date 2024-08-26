@@ -31,7 +31,7 @@ if __name__ == "__main__":
         elif choice == '4':
             manager.get_budget()
         elif choice == '5':
-            manager.list_budgets()
+            manager.view_all_budgets()
         elif choice == '6':
             manager.raise_alert()
         elif choice == '7':

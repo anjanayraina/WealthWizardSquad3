@@ -71,7 +71,6 @@ class BudgetManager:
 
         params = (budget_id, user_id, category, amount, start_date, end_date)
         self.db_helper.execute_query(query, params, commit=True)
-
         self.budgets[budget_id] = Budget(budget_id, user_id, category, amount, start_date, end_date)
 
     def _validate_date(self, date_str):
@@ -124,17 +123,40 @@ class BudgetManager:
 
         print(self.budgets[budget_id])
 
+    def view_all_budgets(self, user_id):
+        query = """
+            SELECT budget_id, user_id, category, amount, start_date, end_date
+            FROM budgets
+            WHERE user_id = :user_id
+        """
+        try:
+            result = self.db_helper.execute_query(query, params={'user_id': user_id})
 
-    def list_budgets(self):
-        if not self.budgets:
-            print("No budgets set.")
-            # API TO CALL CREATE BUDGET.
-        else:
-            table = PrettyTable()
-            table.field_names = ["Budget Id", "Category", "Amount", "Start_data", "End_date"]
-            for budget in self.budgets.values():
-                table.add_row([budget.budget_id, budget.category, budget.amount, budget.start_date, budget.end_date])
-            print(table)
+            if not result:
+                print(f"No budgets found for user ID {user_id}.")
+                print("Let's create a new budget.")
+                try:
+                    budget_id = input("Enter budget ID: ")
+                    category = input("Enter category: ")
+                    amount = input("Enter amount: ")
+                    start_date = input("Enter start date (DD-MM-YYYY): ")
+                    end_date = input("Enter end date (DD-MM-YYYY): ")
+                    self.create_budget(budget_id, user_id, category, amount, start_date, end_date)
+                    self.view_all_budgets(user_id)  
+                except Exception as e:
+                    print(f"Error: {e}")
+            else:
+                table = PrettyTable()
+                table.field_names = ["Budget Id", "User Id", "Category", "Amount", "Start_date", "End_date"]
+                for budget in result:
+                    table.add_row([budget[0], budget[1], budget[2], budget[3], budget[4], budget[5]])
+                print(table)
+
+        except Exception as e:
+            print(f"Error: {e}")
+
+        return result
+
 
     def raise_alert(self):
         budget_id = input("Enter the budget ID to check for alerts: ")

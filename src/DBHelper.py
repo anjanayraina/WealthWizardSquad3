@@ -29,7 +29,7 @@ class DBHelper:
             if commit:
                 self.connection.commit()
 
-            if query.strip().upper().startswith("SELECT"):
+            if query.strip().upper().startswith("SELECT") :
                 return self.cursor.fetchall()
             else:
                 return None
