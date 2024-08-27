@@ -1,5 +1,8 @@
 from datetime import datetime, timedelta
-from src import UserNotLoggedInError , BudgetAlreadyExistsError , Budget , is_user_logged_in , budget_already_exists , DBHelper
+from exceptions import UserNotLoggedInError , BudgetAlreadyExistsError
+from Budget import Budget
+from utils import is_user_logged_in , budget_already_exists
+from DBHelper import DBHelper
 from prettytable import PrettyTable
 import os
 from dotenv import load_dotenv
@@ -21,7 +24,7 @@ class BudgetManager:
     def test_connection(self):
         query = "select * from budgets"
         result = self.db_helper.execute_query(query)
-        print(result)
+        print(f"DB content: {result}")
 
     def check_for_duplicate_id(self , id):
         query = "SELECT * FROM budgets WHERE budget_id = :1"
@@ -44,6 +47,7 @@ class BudgetManager:
 
         if budget_already_exists(budget_id):
             raise BudgetAlreadyExistsError("Budget already exists, please enter a new Budget ")
+        
         if self.check_for_duplicate_id(budget_id):
             raise BudgetAlreadyExistsError("Budget already exists, please enter a new Budget")
 
@@ -78,31 +82,58 @@ class BudgetManager:
         except ValueError:
             raise ValueError("Date format must be DD-MM-YYYY.")
         
-    def update_budget(self):
-        budget_id = input("Enter the budget ID to update: ")
-        if budget_id not in self.budgets:
+    def edit_budget(self, budget_id, user_id, category, amount, start_date, end_date):
+        if not is_user_logged_in(user_id):
+            raise UserNotLoggedInError("User must be logged in to create a budget")
+        
+        if not budget_id:
+            raise ValueError("Budget ID cannot be empty.")
+
+        budget_id = int(budget_id)
+        if not user_id:
+            raise ValueError("User ID cannot be empty.")
+
+        if not category:
+            raise ValueError("Budget category cannot be empty.")
+
+        if not amount:
+            raise ValueError("Budget amount cannot be empty.")
+
+        if not self.check_for_duplicate_id(budget_id): # if a budget doesn't exists
             print("No budget found with this ID.")
             return
-        amount = input("Enter new amount (or leave blank to keep current): ")
-        start_date = input("Enter new start date (YYYY-MM-DD) (or leave blank to keep current): ")
-        end_date = input("Enter new end date (YYYY-MM-DD) (or leave blank to keep current): ")
+
         try:
             if amount:
                 amount = float(amount)
                 if amount <= 0:
                     raise ValueError("Amount must be greater than zero.")
-                self.budgets[budget_id].amount = amount
-            if start_date:
-                self._validate_date(start_date)
-                self.budgets[budget_id].start_date = datetime.strptime(start_date, '%Y-%m-%d')
-            if end_date:
-                self._validate_date(end_date)
-                if datetime.strptime(end_date, '%Y-%m-%d') <= self.budgets[budget_id].start_date:
-                    raise ValueError("End date must be after the start date.")
-                self.budgets[budget_id].end_date = datetime.strptime(end_date, '%Y-%m-%d')
-            print(f"Budget with ID {budget_id} updated successfully.")
         except ValueError as e:
             print(f"Error: {e}")
+        
+        if not start_date:
+            raise ValueError("Start date cannot be empty.")
+        self._validate_date(start_date)
+
+        if not end_date:
+            raise ValueError("End date cannot be empty.")
+        self._validate_date(end_date)
+
+        if datetime.strptime(end_date, '%d-%m-%Y') <= datetime.strptime(start_date, '%d-%m-%Y'):
+            raise ValueError("End date must be after the start date.")
+
+        start_date = datetime.strptime(start_date, '%d-%m-%Y')
+        end_date = datetime.strptime(end_date,'%d-%m-%Y')
+
+        query = """
+            BEGIN
+                edit_budget_proc(:1, :2, :3, :4, :5, :6);
+            END;
+        """
+        params = (budget_id, user_id, category, amount, start_date, end_date)
+        self.db_helper.execute_query(query, params, commit=True)
+        # self.budgets[budget_id] = Budget(budget_id, user_id, category, amount, start_date, end_date)
+        
 
     def delete_budget(self):
         budget_id = input("Enter the budget ID to delete: ")

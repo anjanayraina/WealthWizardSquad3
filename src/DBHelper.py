@@ -22,6 +22,7 @@ class DBHelper:
             raise
 
     def execute_query(self, query, params=None, commit=True):
+        # print(query,params)
         if self.cursor is None:
             raise ValueError("Cursor is not initialized. Call connect() first.")
         try:
@@ -34,7 +35,7 @@ class DBHelper:
             else:
                 return None
         except oracledb.DatabaseError as e:
-            print(f"A budget with this ID already exists.")
+            print(f"Exception occured")
             raise
 
     def close(self):
