@@ -5,7 +5,7 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-print(os.getenv("USER_SYSTEM"))
+
 class BudgetManager:
     def __init__(self):
         self.budgets = {}
@@ -21,6 +21,13 @@ class BudgetManager:
         query = "select * from budgets"
         result = self.db_helper.execute_query(query)
         print(result)
+
+    def check_for_duplicate_id(self , id):
+        query = "SELECT * FROM budgets WHERE budget_id = :1"
+        result = self.db_helper.execute_query(query, params=(id,))
+        if len(result) > 0 :
+            return True
+        return False
 
     def create_budget(self, budget_id, user_id, category, amount, start_date, end_date):
         if not budget_id:
@@ -38,8 +45,8 @@ class BudgetManager:
         if not is_user_logged_in(user_id):
             raise UserNotLoggedInError("User must be logged in to create a budget")
 
-        if budget_already_exists(budget_id):
-            raise BudgetAlreadyExistsError("Budget already exists, please enter a new Budget ")
+        if self.check_for_duplicate_id(budget_id):
+            raise BudgetAlreadyExistsError("Budget already exists, please enter a new Budget")
 
         try:
             amount = float(amount)
