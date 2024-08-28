@@ -16,13 +16,12 @@ class DBHelper:
                 dsn=self.dsn
             )
             self.cursor = self.connection.cursor()
-            print("Database connection established.")
+            print("Database connection established")
         except oracledb.DatabaseError as e:
             print(f"Error connecting to the database: {e}")
             raise
 
     def execute_query(self, query, params=None, commit=True):
-        # print(query,params)
         if self.cursor is None:
             raise ValueError("Cursor is not initialized. Call connect() first.")
         try:
