@@ -215,6 +215,8 @@ class BudgetManager:
         except Exception as e:
             print(f"Error: {e}")
         return result
+
+
     
     def raise_alert(self):
         budget_id = input("Enter the budget ID to check for alerts: ")
