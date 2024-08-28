@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
-from src.exceptions import UserNotLoggedInError , BudgetAlreadyExistsError
-from src.Budget import Budget
-from src.utils import is_user_logged_in , budget_already_exists
-from src.DBHelper import DBHelper
+from exceptions import UserNotLoggedInError , BudgetAlreadyExistsError
+from Budget import Budget
+from utils import is_user_logged_in , budget_already_exists
+from DBHelper import DBHelper
 from prettytable import PrettyTable
 import os
 from dotenv import load_dotenv
@@ -83,27 +83,43 @@ class BudgetManager:
             raise ValueError("Date format must be DD-MM-YYYY.")
         
     def edit_budget(self, budget_id, user_id, category, amount, start_date, end_date):
-        if not is_user_logged_in(user_id):
+        """"
+            ### Editing a budget
+            Arguments
+                - Budget Manager Object
+                - `budget_id` - The budget ID whose contents should be edited
+                - `user_id` - The User ID associated with the Budget
+                - `category` - The Budget category
+                - `amount` - Edited amount
+                - `start_date` - New start date of the budget (expects in the 'DD/MM/YYYY' form)
+                - `end_date` - New end date of the budget
+        """
+        if not is_user_logged_in(user_id): # to check if the user has logged in or not
             raise UserNotLoggedInError("User must be logged in to create a budget")
         
-        if not budget_id:
+        if not budget_id: # To check if the budget_id is empty or not
             raise ValueError("Budget ID cannot be empty.")
 
-        budget_id = int(budget_id)
-        if not user_id:
-            raise ValueError("User ID cannot be empty.")
-
-        if not category:
-            raise ValueError("Budget category cannot be empty.")
-
-        if not amount:
-            raise ValueError("Budget amount cannot be empty.")
-
+        try: # Check if the `budget_id` is a valid integer or not
+            budget_id = int(budget_id)
+        except ValueError:
+            print("Budget ID must be an Integer!")
+            raise
+            
         if not self.check_for_duplicate_id(budget_id): # if a budget doesn't exists
             print("No budget found with this ID.")
             return
 
-        try:
+        if not user_id: # if `user_id` is empty or not
+            raise ValueError("User ID cannot be empty.")
+
+        if not category: # if `category` is empty or not
+            raise ValueError("Budget category cannot be empty.")
+
+        if not amount: # if `amount` is empty or not
+            raise ValueError("Budget amount cannot be empty.")
+
+        try: # if `amount` isn't convertible to float
             if amount:
                 amount = float(amount)
                 if amount <= 0:
@@ -111,27 +127,36 @@ class BudgetManager:
         except ValueError as e:
             print(f"Error: {e}")
         
-        if not start_date:
+        if not start_date: # if `start_date` is valid or not
             raise ValueError("Start date cannot be empty.")
-        self._validate_date(start_date)
 
-        if not end_date:
+        if not end_date: # if `end_date` is valid or not
             raise ValueError("End date cannot be empty.")
-        self._validate_date(end_date)
 
+        try: # If `start_date` and `end_date` are of proper date formats
+            self._validate_date(start_date)
+            self._validate_date(end_date)
+        except Exception as e:
+            print(f"Exception occured {e}")
+
+        # if the `end_date` is greater than `start_date`
         if datetime.strptime(end_date, '%d-%m-%Y') <= datetime.strptime(start_date, '%d-%m-%Y'):
             raise ValueError("End date must be after the start date.")
 
+        # Converting `start_date` and `end_date` to datetime objects
         start_date = datetime.strptime(start_date, '%d-%m-%Y')
         end_date = datetime.strptime(end_date,'%d-%m-%Y')
 
+        # Query to call the `edit_budget_proc` procedure
         query = """
             BEGIN
                 edit_budget_proc(:1, :2, :3, :4, :5, :6);
             END;
         """
         params = (budget_id, user_id, category, amount, start_date, end_date)
+        
         self.db_helper.execute_query(query, params, commit=True)
+        print("Updation successful!")
         # self.budgets[budget_id] = Budget(budget_id, user_id, category, amount, start_date, end_date)
         
 
