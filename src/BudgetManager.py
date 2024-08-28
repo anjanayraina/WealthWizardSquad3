@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
-from exceptions import UserNotLoggedInError , BudgetAlreadyExistsError
-from Budget import Budget
-from utils import is_user_logged_in , budget_already_exists
-from DBHelper import DBHelper
+from src.exceptions import UserNotLoggedInError , BudgetAlreadyExistsError
+from src.Budget import Budget
+from src.utils import is_user_logged_in , budget_already_exists
+from src.DBHelper import DBHelper
 from prettytable import PrettyTable
 import os
 from dotenv import load_dotenv
@@ -135,13 +135,24 @@ class BudgetManager:
         # self.budgets[budget_id] = Budget(budget_id, user_id, category, amount, start_date, end_date)
         
 
-    def delete_budget(self):
-        budget_id = input("Enter the budget ID to delete: ")
-        if budget_id not in self.budgets:
-            print("No budget found with this ID.")
-            return
-        del self.budgets[budget_id]
-        print(f"Budget with ID {budget_id} deleted successfully.")
+    def delete_budget(self,budget_id):
+        #budget_id = input("Enter the budget ID to delete: ")
+        #print(self.budgets)
+        # if budget_id not in self.budgets:
+        #     print("No budget found with this ID.")
+        #     return
+        # del self.budgets[budget_id]
+        # print(f"Budget with ID {budget_id} deleted successfully.")
+        query1 = """
+            BEGIN
+                delete_budget_proc(:1);
+            END;
+        """
+
+
+        params = (budget_id,)
+        self.db_helper.execute_query(query1, params, commit=True)
+        
     def get_budget(self):
         budget_id = input("Enter the budget ID to retrieve: ")
         if budget_id not in self.budgets:
