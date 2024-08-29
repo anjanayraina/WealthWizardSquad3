@@ -1,4 +1,4 @@
-from BudgetManager import BudgetManager
+from .BudgetManager import BudgetManager
 
 
 if __name__ == "__main__":
@@ -34,7 +34,8 @@ if __name__ == "__main__":
                 end_date = input("Edit end date (DD-MM-YYYY): ")
                 manager.edit_budget(budget_id, user_id, category, amount, start_date, end_date)
             elif choice == '3':
-                manager.delete_budget()
+                budget_id_del = input("Enter budget ID to deleted: ")
+                manager.delete_budget(budget_id_del)
             elif choice == '4':
                 manager.get_budget()
             elif choice == '5':

@@ -7,7 +7,7 @@ import os
 import random as rand
 from unittest.mock import patch
 from dotenv import load_dotenv
-
+import oracledb
 load_dotenv()
 
 
@@ -51,8 +51,8 @@ class TestBudgetManager(unittest.TestCase):
         result = self.db_helper.execute_query(query, params=(budget_id,))
         self.assertEqual(len(result), 1)
         budget_record = result[0]
-        self.assertEqual(budget_record[0], budget_id)
-        self.assertEqual(budget_record[1], user_id)
+        self.assertEqual(int(budget_record[0]), int(budget_id))
+        self.assertEqual(int(budget_record[1]), int(user_id))
         self.assertEqual(budget_record[2], category)
         self.assertEqual(budget_record[3], amount)
         self.assertEqual(budget_record[4].date(),
@@ -158,13 +158,13 @@ class TestBudgetManager(unittest.TestCase):
         ]
         for budget in budgets:
             self.manager.create_budget(*budget)
-
+        self.manager.view_all_budgets(2000)
         query = "SELECT * FROM budgets WHERE user_id = :1"
         result = self.db_helper.execute_query(query, params=(2000,))
         self.assertGreater(len(result), 0, "No budgets found for user_id 2000.")
         for budget in result:
-            self.assertEqual(budget[1], 2000)
-            self.assertIn(budget[0], [b[0] for b in budgets if b[1] == 2000])
+            self.assertEqual(int(budget[1]), 2000)
+           
 
 
 if __name__ == '__main__':

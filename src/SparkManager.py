@@ -43,8 +43,8 @@ class SparkManager:
         .option("password",self.__password) \
         .option("driver",self.driver).load()
 
-        df.show()
-        # return df
+        # df.show()
+        return df
 
     def stop_session(self):
         # Stop the SparkSession

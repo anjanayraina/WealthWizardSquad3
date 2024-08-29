@@ -8,6 +8,7 @@ from pyspark.sql import SparkSession
 spark = SparkSession.builder \
     .appName("OracleConnection") \
     .config("spark.driver.extraClassPath", r"C:\Users\HP\Downloads\ojdbc8.jar") \
+    .config("spark.cleaner.referenceTracking.cleanCheckpoints", "false")\
     .getOrCreate()
 
 # JDBC URL and connection properties
@@ -47,7 +48,10 @@ conn = jaydebeapi.connect(
 # Create a cursor object
 
 cursor = conn.cursor()
-user_id_to_check=2000
+
+#give the user_id to delete
+#user_id_to_check=103
+user_id_to_check=input("Enter user_id to delete: ")
 # Execute the DELETE command
 # Check if the user_id exists
 check_sql = "SELECT COUNT(*) FROM budgets WHERE user_id = ?"
@@ -67,6 +71,21 @@ else:
 
 # # Commit the transaction
 # conn.commit()
+remaining_df = spark.read \
+    .format("jdbc") \
+    .option("url", jdbc_url) \
+    .option("dbtable", "budgets") \
+    .option("user", connection_properties["user"]) \
+    .option("password", connection_properties["password"]) \
+    .option("driver", connection_properties["driver"]) \
+    .load()
+
+# Show the remaining data
+remaining_df.show()
+
+# Write the remaining data to a CSV file
+#csv_output_path = r"remaining_budgets.csv"
+#remaining_df.write.csv(csv_output_path, header=True, mode="overwrite")
 
 # Close the cursor and connection
 cursor.close()
