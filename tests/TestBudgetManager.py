@@ -14,6 +14,7 @@ class TestBudgetManager(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        #oracledb.init_oracle_client()
         cls.db_helper = DBHelper(
             user=os.getenv("USER_SYSTEM"),
             password=os.getenv("PASSWORD"),
