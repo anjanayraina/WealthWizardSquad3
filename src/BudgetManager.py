@@ -178,6 +178,12 @@ class BudgetManager:
         params = (budget_id,)
         self.db_helper.execute_query(query1, params, commit=True)
         
+        if budget_id in self.budgets:
+            del self.budgets[budget_id]
+            print(f"Budget with ID {budget_id} deleted successfully.")
+
+
+        
     def get_budget(self):
         budget_id = input("Enter the budget ID to retrieve: ")
         if budget_id not in self.budgets:
