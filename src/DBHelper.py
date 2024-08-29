@@ -16,7 +16,7 @@ class DBHelper:
                 dsn=self.dsn
             )
             self.cursor = self.connection.cursor()
-            print("Database connection established.")
+            print("Database connection established")
         except oracledb.DatabaseError as e:
             print(f"Error connecting to the database: {e}")
             raise
@@ -34,7 +34,7 @@ class DBHelper:
             else:
                 return None
         except oracledb.DatabaseError as e:
-            print(f"A budget with this ID already exists.")
+            print(f"Exception occured")
             raise
 
     def close(self):
