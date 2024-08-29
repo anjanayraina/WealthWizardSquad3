@@ -52,18 +52,27 @@ BEGIN
 END;
 
 -- Viewing all budgets
-CREATE OR REPLACE PROCEDURE view_all_budgets
-IS
+CREATE OR REPLACE PROCEDURE view_all_budgets (
+    p_user_id IN NUMBER,
+    p_budget_id IN NUMBER,
+    p_category OUT VARCHAR2,
+    p_amount OUT NUMBER,
+    p_start_date OUT DATE,
+    p_end_date OUT DATE
+) AS
 BEGIN
-    FOR rec IN (SELECT budget_id, category, amount, start_date, end_date FROM budgets)
-    LOOP
-        DBMS_OUTPUT.PUT_LINE('Budget ID: ' || rec.budget_id);
-        DBMS_OUTPUT.PUT_LINE('Category: ' || rec.category);
-        DBMS_OUTPUT.PUT_LINE('Amount: ' || rec.amount);
-        DBMS_OUTPUT.PUT_LINE('Start Date: ' || rec.start_date);
-        DBMS_OUTPUT.PUT_LINE('End Date: ' || rec.end_date);
-        DBMS_OUTPUT.PUT_LINE('------------------------------------');
-    END LOOP;
-END view_all_budgets;
+    SELECT category, amount, start_date, end_date
+    INTO p_category, p_amount, p_start_date, p_end_date
+    FROM budgets
+    WHERE user_id = p_user_id;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        -- Handle the case where no data is found
+        p_category := NULL;
+        p_amount := NULL;
+        p_start_date := NULL;
+        p_end_date := NULL;
+END;
 /
+
 
