@@ -48,7 +48,10 @@ conn = jaydebeapi.connect(
 # Create a cursor object
 
 cursor = conn.cursor()
-user_id_to_check=103
+
+#give the user_id to delete
+#user_id_to_check=103
+user_id_to_check=input("Enter user_id to delete: ")
 # Execute the DELETE command
 # Check if the user_id exists
 check_sql = "SELECT COUNT(*) FROM budgets WHERE user_id = ?"
