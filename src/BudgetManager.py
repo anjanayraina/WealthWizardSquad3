@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
-from exceptions import UserNotLoggedInError , BudgetAlreadyExistsError
-from Budget import Budget
-from utils import is_user_logged_in , budget_already_exists
-from DBHelper import DBHelper
+from src.exceptions import UserNotLoggedInError , BudgetAlreadyExistsError
+from src.Budget import Budget
+from src.utils import is_user_logged_in , budget_already_exists
+from src.DBHelper import DBHelper
 from prettytable import PrettyTable
 import os
 from dotenv import load_dotenv
@@ -186,6 +186,7 @@ class BudgetManager:
         print(self.budgets[budget_id])
 
     def view_all_budgets(self, user_id):
+        #Query to view all budgets
         query = """
             SELECT budget_id, user_id, category, amount, start_date, end_date
             FROM budgets
@@ -193,24 +194,33 @@ class BudgetManager:
         """
         try:
             result = self.db_helper.execute_query(query, params={'user_id': user_id})
+            #If there is not budget found. It will be redirected to create_budget procedure.
             if not result:
                 print(f"No budgets found for user ID {user_id}.")
                 print("Let's create a new budget.")
                 try:
+                    #User input to create budget
                     budget_id = input("Enter budget ID: ")
                     category = input("Enter category: ")
                     amount = input("Enter amount: ")
                     start_date = input("Enter start date (DD-MM-YYYY): ")
                     end_date = input("Enter end date (DD-MM-YYYY): ")
+
+                    #create_budget function
                     self.create_budget(budget_id, user_id, category, amount, start_date, end_date)
+                    
+                    #view_all_budget function call
                     self.view_all_budgets(user_id)  
                 except Exception as e:
                     print(f"Error: {e}")
             else:
+                #Displaying the data in the table format.
                 table = PrettyTable()
-                table.field_names = ["Budget Id", "User Id", "Category", "Amount", "Start_date", "End_date"]
+                table.field_names = ["Budget Id","Category", "Amount", "Start_date", "End_date"]
                 for budget in result:
-                    table.add_row([budget[0], budget[1], budget[2], budget[3], budget[4], budget[5]])
+                    sdate = budget[4].strftime('%d-%m-%Y')
+                    edate = budget[5].strftime('%d-%m-%Y')
+                    table.add_row([budget[0], budget[2], budget[3], sdate, edate])
                 print(table)
         except Exception as e:
             print(f"Error: {e}")
