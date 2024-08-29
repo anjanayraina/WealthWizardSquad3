@@ -56,22 +56,17 @@ class TestDeleteManager(unittest.TestCase):
         # Step 1: Insert a budget to be deleted or give id of already present ID
         #budget_id =  3 
         budget_id=int(input("What Budget ID you want to delete?"))
-        #rand.randint(0, 100000)
-        # user_id = 2000
-        # category = 'Groceries'
-        # amount = 500
-        # start_date = '01-08-2024'
-        # end_date = '21-08-2024'
-
-        #self.manager.create_budget(budget_id, user_id, category, amount, start_date, end_date)
+        
         query = "SELECT * FROM budgets WHERE budget_id = :1"
         result = self.db_helper.execute_query(query, params=(budget_id,))
-        print('result=',result)
+       
+        print('The deleted item =',result)
         # Step 2: Delete the budget
         if len(result) !=0:
             self.manager.delete_budget(budget_id)
         else:
             print(f"Budget ID {budget_id} doesn't exist")  
+
 
         # Step 3: Verify the budget was deleted
         query = "SELECT * FROM budgets WHERE budget_id = :1"

@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
-from exceptions import UserNotLoggedInError , BudgetAlreadyExistsError
-from Budget import Budget
-from utils import is_user_logged_in , budget_already_exists
-from DBHelper import DBHelper
+from .exceptions import UserNotLoggedInError , BudgetAlreadyExistsError
+from .Budget import Budget
+from .utils import is_user_logged_in , budget_already_exists
+from .DBHelper import DBHelper
 from prettytable import PrettyTable
 import os
 from dotenv import load_dotenv
