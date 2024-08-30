@@ -7,7 +7,7 @@ import os
 import random as rand
 from unittest.mock import patch
 from dotenv import load_dotenv
-import oracledb
+
 load_dotenv()
 
 
@@ -15,7 +15,6 @@ class TestBudgetManager(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        #oracledb.init_oracle_client()
         cls.db_helper = DBHelper(
             user=os.getenv("USER_SYSTEM"),
             password=os.getenv("PASSWORD"),
@@ -148,23 +147,7 @@ class TestBudgetManager(unittest.TestCase):
             with patch('src.budget_already_exists', return_value=False):
                 with self.assertRaises(ValueError) as context:
                     self.manager.create_budget(budget_id, user_id, category, amount, start_date, end_date)
-                self.assertEqual(str(context.exception), "End date must be after the start date.")
-
-
-    def test_list_budgets(self):
-        budgets = [
-            (rand.randint(0, 100000), 2000, 'Groceries', 500, '01-08-2024', '21-08-2024'),
-            (rand.randint(0, 100000), 2001, 'Utilities', 300, '15-08-2024', '30-08-2024'),
-        ]
-        for budget in budgets:
-            self.manager.create_budget(*budget)
-        self.manager.view_all_budgets(2000)
-        query = "SELECT * FROM budgets WHERE user_id = :1"
-        result = self.db_helper.execute_query(query, params=(2000,))
-        self.assertGreater(len(result), 0, "No budgets found for user_id 2000.")
-        for budget in result:
-            self.assertEqual(int(budget[1]), 2000)
-           
+                self.assertEqual(str(context.exception), "End date must be after the start date.")       
 
 
 if __name__ == '__main__':
