@@ -194,6 +194,10 @@ class BudgetManager:
         print(self.budgets[budget_id])
 
     def view_all_budgets(self, user_id):
+        # to check if the user has logged in or not
+        if not is_user_logged_in(user_id): 
+            raise UserNotLoggedInError("User must be logged in to view the budget")
+        
         #Query to view all budgets
         query = """
             SELECT budget_id, user_id, category, amount, start_date, end_date
