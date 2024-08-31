@@ -230,6 +230,11 @@ class BudgetManager:
         print(self.budgets[budget_id])
 
     def view_all_budgets(self, user_id):
+        # to check if the user has logged in or not
+        if not is_user_logged_in(user_id): 
+            raise UserNotLoggedInError("User must be logged in to create a budget")
+        
+        #Query
         query = """
             SELECT budget_id, user_id, category, amount, start_date, end_date
             FROM budgets
@@ -239,6 +244,7 @@ class BudgetManager:
             result = self.db_helper.execute_query(query, params={'user_id': user_id})
             if not result:
                 print(f"No budgets found for user ID {user_id}.")
+                #Creating a new budget
                 print("Let's create a new budget.")
                 try:
                     budget_id = input("Enter budget ID: ")
@@ -246,11 +252,13 @@ class BudgetManager:
                     amount = input("Enter amount: ")
                     start_date = input("Enter start date (DD-MM-YYYY): ")
                     end_date = input("Enter end date (DD-MM-YYYY): ")
+                    #Function call
                     self.create_budget(budget_id, user_id, category, amount, start_date, end_date)
                     self.view_all_budgets(user_id)  
                 except Exception as e:
                     print(f"Error: {e}")
             else:
+                #Displaying the data using pretty table
                 table = PrettyTable()
                 table.field_names = ["Budget Id", "User Id", "Category", "Amount", "Start_date", "End_date"]
                 for budget in result:

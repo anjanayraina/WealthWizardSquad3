@@ -1,6 +1,6 @@
 import oracledb
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import year, col, substring, date_format
+from pyspark.sql.functions import year, col, substring, date_format,sum
 import os
 from dotenv import load_dotenv
 from SparkManager import SparkManager
@@ -64,9 +64,15 @@ class ViewBudgetFilters:
         print("Enter the budget category")
         budget_category = input()
         #Function call
-        print(f"Budget month: {budget_category}")
+        print(f"Budget Category: {budget_category}")
         filtered_by_category = self.filter_by_category(budget_df, budget_category)
         if filtered_by_category is not None:
+            self.display_data(filtered_by_category)
+
+        #Grouping by category 
+        filtered_by_category = self.grp_sum_by_category(budget_df)
+        if filtered_by_category is not None:
+            print("Category Wise budget details")
             self.display_data(filtered_by_category)
 
 
@@ -81,6 +87,16 @@ class ViewBudgetFilters:
             return None
         return filtered_df
 
+    def grp_sum_by_category(self, df):
+        #Empty dataframe
+        if df is None:
+            raise ValueError("DataFrame is None")
+        #Applying grouping and aggregation.
+        filtered_df = df.groupBy('Category').agg(sum('Amount').alias('total_amount'))
+        if filtered_df.count() == 0:
+            print(f"No data found")
+            return None
+        return filtered_df
 
     def filter_by_month(self, df, month: int):
         #Empty dataframe
