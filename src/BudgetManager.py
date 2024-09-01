@@ -160,39 +160,23 @@ class BudgetManager:
         # self.budgets[budget_id] = Budget(budget_id, user_id, category, amount, start_date, end_date)
         
 
-    # def delete_budget(self,budget_id):
-    #     #budget_id = input("Enter the budget ID to delete: ")
-    #     #print(self.budgets)
-    #     # if budget_id not in self.budgets:
-    #     #     print("No budget found with this ID.")
-    #     #     return
-    #     # del self.budgets[budget_id]
-    #     # print(f"Budget with ID {budget_id} deleted successfully.")
-    #     query1 = """
-    #         BEGIN
-    #             delete_budget_proc(:1);
-    #         END;
-    #     """
-
-
-    #     params = (budget_id,)
-    #     self.db_helper.execute_query(query1, params, commit=True)
-        
-    #     if budget_id in self.budgets:
-    #         del self.budgets[budget_id]
-    #         print(f"Budget with ID {budget_id} deleted successfully.")
-
+    
 
 
     def delete_budget(self,budget_id):
+
+
         """Deleting a budget
             Arguments
             - Budget Manager Object
             - `budget_id` - The budget ID whose contents should be edited"""
+        if not is_user_logged_in(budget_id): # to check if the user has logged in or not
+            raise UserNotLoggedInError("User must be logged in to create a budget")
+        
         try:
         # Check if budget_id is an integer
-            if not isinstance(budget_id, int):
-                raise ValueError("Budget ID must be an integer.")
+            budget_id = int(budget_id)
+                #raise ValueError("Budget ID must be an integer.")
         
         # SQL query to delete budget by budget_id
             query1 = """
@@ -209,8 +193,7 @@ class BudgetManager:
             if budget_id in self.budgets:
                 del self.budgets[budget_id]
                 print(f"Budget with ID {budget_id} deleted successfully.")
-            else:
-                print(f"No budget found with ID {budget_id}.")
+            
     
         except ValueError as ve:
             print(f"Input Error: {ve}")
@@ -219,6 +202,7 @@ class BudgetManager:
         except Exception as e:
                 # Generic exception handling
             print(f"An error occurred: {e}")
+
 
 
         
