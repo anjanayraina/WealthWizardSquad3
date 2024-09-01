@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta
-from .exceptions import UserNotLoggedInError , BudgetAlreadyExistsError
-from .Budget import Budget
-from .utils import is_user_logged_in , budget_already_exists
-from .DBHelper import DBHelper
+from src.exceptions import UserNotLoggedInError , BudgetAlreadyExistsError
+from src.Budget import Budget
+from src.utils import is_user_logged_in , budget_already_exists
+from src.DBHelper import DBHelper
 from prettytable import PrettyTable
+from src.BudgetDataProcessor import BudgetDataProcessor
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -26,12 +27,14 @@ class BudgetManager:
         result = self.db_helper.execute_query(query)
         print(f"DB content: {result}")
 
-    def check_for_duplicate_id(self , id):
+    def check_for_duplicate_id(self, id):
         query = "SELECT * FROM budgets WHERE budget_id = :1"
         result = self.db_helper.execute_query(query, params=(id,))
-        if len(result) > 0 :
-            return True
-        return False
+        return len(result) > 0
+
+    def process_csv_file(self, csv_file_path):
+        processor = BudgetDataProcessor()
+        processor.process_and_save(csv_file_path)
 
     def create_budget(self, budget_id, user_id, category, amount, start_date, end_date):
         if not budget_id:
@@ -47,7 +50,7 @@ class BudgetManager:
 
         if budget_already_exists(budget_id):
             raise BudgetAlreadyExistsError("Budget already exists, please enter a new Budget ")
-        
+
         if self.check_for_duplicate_id(budget_id):
             raise BudgetAlreadyExistsError("Budget already exists, please enter a new Budget")
 
@@ -75,13 +78,18 @@ class BudgetManager:
         params = (budget_id, user_id, category, amount, start_date, end_date)
         self.db_helper.execute_query(query, params, commit=True)
         self.budgets[budget_id] = Budget(budget_id, user_id, category, amount, start_date, end_date)
-        
+
     def _validate_date(self, date_str):
-        try:
-            datetime.strptime(date_str, '%d-%m-%Y')
-        except ValueError:
-            raise ValueError("Date format must be DD-MM-YYYY.")
-        
+        if isinstance(date_str, datetime):
+            date_str = date_str.strftime('%d-%m-%Y')
+        elif isinstance(date_str, str):
+            try:
+                datetime.strptime(date_str, '%d-%m-%Y')
+            except ValueError:
+                raise ValueError("Date format must be DD-MM-YYYY.")
+        else:
+            raise ValueError("Invalid date format. Expected string in DD-MM-YYYY format or datetime object.")
+
     def edit_budget(self, budget_id, user_id, category, amount, start_date, end_date):
         """"
             ### Editing a budget
@@ -96,7 +104,7 @@ class BudgetManager:
         """
         if not is_user_logged_in(user_id): # to check if the user has logged in or not
             raise UserNotLoggedInError("User must be logged in to create a budget")
-        
+
         if not budget_id: # To check if the budget_id is empty or not
             raise ValueError("Budget ID cannot be empty.")
 
@@ -105,7 +113,7 @@ class BudgetManager:
         except ValueError:
             print("Budget ID must be an Integer!")
             raise
-            
+
         if not self.check_for_duplicate_id(budget_id): # if a budget doesn't exists
             print("No budget found with this ID.")
             return
@@ -126,7 +134,7 @@ class BudgetManager:
                     raise ValueError("Amount must be greater than zero.")
         except ValueError as e:
             print(f"Error: {e}")
-        
+
         if not start_date: # if `start_date` is valid or not
             raise ValueError("Start date cannot be empty.")
 
@@ -154,58 +162,30 @@ class BudgetManager:
             END;
         """
         params = (budget_id, user_id, category, amount, start_date, end_date)
-        
+
         self.db_helper.execute_query(query, params, commit=True)
         print("Updation successful!")
         # self.budgets[budget_id] = Budget(budget_id, user_id, category, amount, start_date, end_date)
-        
-
-    
 
 
     def delete_budget(self,budget_id):
+        #budget_id = input("Enter the budget ID to delete: ")
+        #print(self.budgets)
+        # if budget_id not in self.budgets:
+        #     print("No budget found with this ID.")
+        #     return
+        # del self.budgets[budget_id]
+        # print(f"Budget with ID {budget_id} deleted successfully.")
+        query1 = """
+            BEGIN
+                delete_budget_proc(:1);
+            END;
+        """
 
 
-        """Deleting a budget
-            Arguments
-            - Budget Manager Object
-            - `budget_id` - The budget ID whose contents should be edited"""
-        if not is_user_logged_in(budget_id): # to check if the user has logged in or not
-            raise UserNotLoggedInError("User must be logged in to create a budget")
-        
-        try:
-        # Check if budget_id is an integer
-            budget_id = int(budget_id)
-                #raise ValueError("Budget ID must be an integer.")
-        
-        # SQL query to delete budget by budget_id
-            query1 = """
-                BEGIN
-                    delete_budget_proc(:1);
-                END;
-                  """
-            params = (budget_id,)
-        
-        # Execute the query and commit the changes
-            self.db_helper.execute_query(query1, params, commit=True)
-        
-        # Check if the budget_id exists in self.budgets
-            if budget_id in self.budgets:
-                del self.budgets[budget_id]
-                print(f"Budget with ID {budget_id} deleted successfully.")
-            
-    
-        except ValueError as ve:
-            print(f"Input Error: {ve}")
-    
-        
-        except Exception as e:
-                # Generic exception handling
-            print(f"An error occurred: {e}")
+        params = (budget_id,)
+        self.db_helper.execute_query(query1, params, commit=True)
 
-
-
-        
     def get_budget(self):
         budget_id = input("Enter the budget ID to retrieve: ")
         if budget_id not in self.budgets:
@@ -214,11 +194,6 @@ class BudgetManager:
         print(self.budgets[budget_id])
 
     def view_all_budgets(self, user_id):
-        # to check if the user has logged in or not
-        if not is_user_logged_in(user_id): 
-            raise UserNotLoggedInError("User must be logged in to create a budget")
-        
-        #Query
         query = """
             SELECT budget_id, user_id, category, amount, start_date, end_date
             FROM budgets
@@ -228,7 +203,6 @@ class BudgetManager:
             result = self.db_helper.execute_query(query, params={'user_id': user_id})
             if not result:
                 print(f"No budgets found for user ID {user_id}.")
-                #Creating a new budget
                 print("Let's create a new budget.")
                 try:
                     budget_id = input("Enter budget ID: ")
@@ -236,13 +210,11 @@ class BudgetManager:
                     amount = input("Enter amount: ")
                     start_date = input("Enter start date (DD-MM-YYYY): ")
                     end_date = input("Enter end date (DD-MM-YYYY): ")
-                    #Function call
                     self.create_budget(budget_id, user_id, category, amount, start_date, end_date)
-                    self.view_all_budgets(user_id)  
+                    self.view_all_budgets(user_id)
                 except Exception as e:
                     print(f"Error: {e}")
             else:
-                #Displaying the data using pretty table
                 table = PrettyTable()
                 table.field_names = ["Budget Id", "User Id", "Category", "Amount", "Start_date", "End_date"]
                 for budget in result:
@@ -253,7 +225,7 @@ class BudgetManager:
         return result
 
 
-    
+
     def raise_alert(self):
         budget_id = input("Enter the budget ID to check for alerts: ")
         if budget_id not in self.budgets:

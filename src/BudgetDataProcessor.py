@@ -1,10 +1,11 @@
 import os
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, to_date, when
+from pyspark.sql.functions import col, to_date
 from pyspark.sql.types import DoubleType
 from src.DBHelper import DBHelper
 from dotenv import load_dotenv
 from prettytable import PrettyTable
+from datetime import datetime
 
 load_dotenv()
 
@@ -27,13 +28,11 @@ class BudgetDataProcessor:
         return df
 
     def process_data(self, df):
-
-        df = df.withColumn("start_date", to_date(col("start_date"), "yyyy-MM-dd"))
-        df = df.withColumn("end_date", to_date(col("end_date"), "yyyy-MM-dd"))
+        df = df.withColumn("start_date", to_date(col("start_date"), "dd-MM-yyyy"))
+        df = df.withColumn("end_date", to_date(col("end_date"), "dd-MM-yyyy"))
 
         df = df.na.drop(subset=["user_id", "category", "amount", "start_date", "end_date"])
         df = df.filter(col("amount") > 0)
-
 
         df = df.filter(col("end_date") > col("start_date"))
 
@@ -46,25 +45,25 @@ class BudgetDataProcessor:
                     create_budget_proc(:1, :2, :3, :4, :5, :6);
                 END;
             """
+            start_date = row['start_date'].strftime('%d-%m-%Y')
+            end_date = row['end_date'].strftime('%d-%m-%Y')
+
             params = (
                 row['budget_id'],
                 row['user_id'],
                 row['category'],
                 row['amount'],
-                row['start_date'].strftime('%d-%m-%Y'),
-                row['end_date'].strftime('%d-%m-%Y')
+                start_date,
+                end_date
             )
             self.db_helper.execute_query(query, params, commit=True)
 
     def process_and_save(self, file_path):
-        """Read, process, and save data from a CSV file to the database."""
         df = self.read_csv(file_path)
         cleaned_df = self.process_data(df)
-        print(cleaned_df)
         self.save_to_database(cleaned_df)
 
     def close(self):
-        """Close the Spark session and database connection."""
         self.spark.stop()
         self.db_helper.close()
 
@@ -86,4 +85,3 @@ class BudgetDataProcessor:
         except Exception as e:
             print(f"Error: {e}")
         return result
-
