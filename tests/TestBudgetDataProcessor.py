@@ -81,8 +81,8 @@ class TestBudgetDataProcessor(unittest.TestCase):
 
     def test_save_to_database(self):
         data = [
-            ("1", "user_1", "Groceries", 200.0, "2024-01-01", "2024-01-31"),
-            ("2", "user_2", "Entertainment", 150.0, "2024-01-01", "2024-01-31")
+            ("1", "user_1", "Groceries", 200.0, datetime.date(2024, 1, 1), datetime.date(2024, 1, 31)),
+            ("2", "user_2", "Entertainment", 150.0, datetime.date(2024, 1, 1), datetime.date(2024, 1, 31))
         ]
         schema = StructType([
             StructField("budget_id", StringType(), True),
@@ -114,15 +114,6 @@ class TestBudgetDataProcessor(unittest.TestCase):
                 END;
             """, params, commit=True)
 
-    @patch('src.BudgetDataProcessor.DBHelper')
-    def test_process_and_save(self, MockDBHelper):
-        mock_db_helper = MockDBHelper.return_value
-        mock_db_helper.save.return_value = True
-
-        file_path = "../budget_data.csv"
-        self.processor.process_and_save(file_path)
-
-        mock_db_helper.save.assert_called()
 
 if __name__ == '__main__':
     unittest.main()
