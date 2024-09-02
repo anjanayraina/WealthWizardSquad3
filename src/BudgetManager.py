@@ -173,10 +173,15 @@ class BudgetManager:
         if not is_user_logged_in(budget_id): # to check if the user has logged in or not
             raise UserNotLoggedInError("User must be logged in to create a budget")
         
+        
+        
         try:
         # Check if budget_id is an integer
             budget_id = int(budget_id)
                 #raise ValueError("Budget ID must be an integer.")
+            if not self.check_for_duplicate_id(budget_id): # if a budget doesn't exists
+                print("No budget found with this ID.")
+                return    
         
         # SQL query to delete budget by budget_id
             query1 = """
@@ -188,6 +193,7 @@ class BudgetManager:
         
         # Execute the query and commit the changes
             self.db_helper.execute_query(query1, params, commit=True)
+            print(f"Budget with ID {budget_id} deleted successfully.")
         
         # Check if the budget_id exists in self.budgets
             if budget_id in self.budgets:
