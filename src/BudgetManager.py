@@ -183,7 +183,6 @@ class BudgetManager:
         """
 
 
-<<<<<<< HEAD
         """Deleting a budget
             Arguments
             - Budget Manager Object
@@ -226,10 +225,6 @@ class BudgetManager:
         except Exception as e:
                 # Generic exception handling
             print(f"An error occurred: {e}")
-=======
-        params = (budget_id,)
-        self.db_helper.execute_query(query1, params, commit=True)
->>>>>>> 7aa386d1fe7762fd2c66f42d5ff398618746d777
 
     def get_budget(self):
         budget_id = input("Enter the budget ID to retrieve: ")
