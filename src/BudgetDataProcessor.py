@@ -5,10 +5,8 @@ from pyspark.sql.types import DoubleType
 from src.DBHelper import DBHelper
 from dotenv import load_dotenv
 from prettytable import PrettyTable
-from datetime import datetime
 
 load_dotenv()
-
 class BudgetDataProcessor:
     def __init__(self):
         self.spark = SparkSession.builder \
@@ -28,12 +26,12 @@ class BudgetDataProcessor:
         return df
 
     def process_data(self, df):
+
+
+        df = df.na.drop(subset=["user_id", "category", "amount", "start_date", "end_date" , "budget_id"])
+        df = df.filter(col("amount") > 0)
         df = df.withColumn("start_date", to_date(col("start_date"), "dd-MM-yyyy"))
         df = df.withColumn("end_date", to_date(col("end_date"), "dd-MM-yyyy"))
-
-        df = df.na.drop(subset=["user_id", "category", "amount", "start_date", "end_date"])
-        df = df.filter(col("amount") > 0)
-
         df = df.filter(col("end_date") > col("start_date"))
 
         return df

@@ -48,9 +48,6 @@ class BudgetManager:
         if not is_user_logged_in(user_id):
             raise UserNotLoggedInError("User must be logged in to create a budget")
 
-        if budget_already_exists(budget_id):
-            raise BudgetAlreadyExistsError("Budget already exists, please enter a new Budget ")
-
         if self.check_for_duplicate_id(budget_id):
             raise BudgetAlreadyExistsError("Budget already exists, please enter a new Budget")
 
@@ -68,8 +65,7 @@ class BudgetManager:
         self._validate_date(end_date)
         if datetime.strptime(end_date, '%d-%m-%Y') <= datetime.strptime(start_date, '%d-%m-%Y'):
             raise ValueError("End date must be after the start date.")
-        if budget_id in self.budgets:
-            raise ValueError("A budget with this ID already exists.")
+
         query = """
             BEGIN
                 create_budget_proc(:1, :2, :3, :4, :5, :6);
@@ -277,15 +273,7 @@ class BudgetManager:
             print(f"Alert: Budget ID {budget_id} for category '{budget.category}' is nearing its end date.")
         else:
             print(f"Budget ID {budget_id} is not nearing its end date.")
-    def _validate_budget(self, budget_id, amount, start_date, end_date):
-        if budget_id in self.budgets:
-            raise ValueError("A budget with this ID already exists.")
-        if amount <= 0:
-            raise ValueError("Amount must be greater than zero.")
-        self._validate_date(start_date)
-        self._validate_date(end_date)
-        if datetime.strptime(end_date, '%Y-%m-%d') <= datetime.strptime(start_date, '%Y-%m-%d'):
-            raise ValueError("End date must be after the start date.")
+
 
 
 

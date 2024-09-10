@@ -35,9 +35,11 @@ if __name__ == "__main__":
                     start_date = input("Enter start date (DD-MM-YYYY): ")
                     end_date = input("Enter end date (DD-MM-YYYY): ")
                     manager.create_budget(budget_id, user_id, category, amount, start_date, end_date)
+                    print("Budget Created!!")
                 elif sub_choice == '2':
                     csv_file_path = input("Enter the path to the CSV file: ")
                     manager.process_csv_file(csv_file_path)
+                    print("Budget Created!!")
                 else:
                     print("Invalid choice. Please try again.")
 

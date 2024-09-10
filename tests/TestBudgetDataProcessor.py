@@ -46,10 +46,10 @@ class TestBudgetDataProcessor(unittest.TestCase):
 
     def test_process_data(self):
         data = [
-            ("1", "user_1", "Groceries", 200.0, "01-01-2024", "31-01-2024"),
-            ("2", "user_2", "Entertainment", 150.0, "01-01-2024", "31-01-2024"),
-            ("3", "user_3", "Rent", -500.0, "01-01-2024", "01-01-2024"),
-            ("4", "user_4", "Utilities", 0.0, "01-01-2024", "31-01-2024"),
+            ("1", "asfna", "Groceries", 200.0, "01-01-2024", "31-01-2024"),
+            ("2", "alfkj", "Entertainment", 150.0, "01-01-2024", "31-01-2024"),
+            ("3", "", "afgkjb", -500.0, "01-01-2024", "01-01-2024"),
+            ("4", "afln", "Utilities", 0.0, "01-01-2024", "31-01-2024"),
         ]
         schema = StructType([
             StructField("budget_id", StringType(), True),
@@ -64,8 +64,8 @@ class TestBudgetDataProcessor(unittest.TestCase):
         processed_df = self.processor.process_data(df)
 
         expected_data = [
-            ("1", "user_1", "Groceries", 200.0, datetime.date(2024, 1, 1), datetime.date(2024, 1, 31)),
-            ("2", "user_2", "Entertainment", 150.0, datetime.date(2024, 1, 1), datetime.date(2024, 1, 31))
+            ("1", "asfna", "Groceries", 200.0, datetime.date(2024, 1, 1), datetime.date(2024, 1, 31)),
+            ("2", "alfkj", "Entertainment", 150.0, datetime.date(2024, 1, 1), datetime.date(2024, 1, 31))
         ]
         expected_schema = StructType([
             StructField("budget_id", StringType(), True),
