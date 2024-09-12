@@ -44,8 +44,9 @@ if __name__ == "__main__":
                     print("Invalid choice. Please try again.")
 
             elif choice == '2':
-                budget_id = input("Enter budget ID: ")
                 user_id = input("Enter user ID: ")
+                manager.view_all_budgets(user_id)
+                budget_id = input("Enter budget ID: ")
                 category = input("Edit budget category: ")
                 amount = input("Edit budget amount: ")
                 start_date = input("Edit start date (DD-MM-YYYY): ")

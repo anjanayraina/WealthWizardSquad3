@@ -28,7 +28,10 @@ END;
 
 -- Test code for editing budget
 BEGIN
-    edit_budget(1,101,'Groceries',1000,TO_DATE('2024-08-01','YYYY-MM-DD'),TO_DATE('2024-08-30','YYYY-MM-DD'));
+    edit_budget_proc(2,'102','Dining out',2000,TO_DATE('2024-08-07','YYYY-MM-DD'),TO_DATE('2024-08-30','YYYY-MM-DD'));
 END;
 /
 
+SELECT * FROM budgets;
+
+ALTER SESSION SET NLS_DATE_FORMAT = 'DD-MM-YYYY';

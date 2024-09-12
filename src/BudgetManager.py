@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from src.exceptions import UserNotLoggedInError , BudgetAlreadyExistsError
+from src.exceptions import UserNotLoggedInError , BudgetAlreadyExistsError, InvalidDataError
 from src.Budget import Budget
 from src.utils import is_user_logged_in , budget_already_exists
 from src.DBHelper import DBHelper
@@ -22,6 +22,7 @@ class BudgetManager:
             sid=os.getenv("SID")
         )
         self.db_helper.connect()
+    
     def test_connection(self):
         query = "select * from budgets"
         result = self.db_helper.execute_query(query)
@@ -35,6 +36,21 @@ class BudgetManager:
     def process_csv_file(self, csv_file_path):
         processor = BudgetDataProcessor()
         processor.process_and_save(csv_file_path)
+
+    def budget_associated_with_user(self,budget_id,user_id):
+        query = "SELECT user_id FROM budgets WHERE budget_id = :1"
+        result = self.db_helper.execute_query(query,params=(budget_id,))
+        try:
+            associated_user_id = result[0][0]
+        except IndexError:
+            return False
+        if associated_user_id == user_id:
+            return True
+
+    def check_user_exists(self,user_id):
+        query = "SELECT * FROM budgets WHERE user_id = :1"
+        result = self.db_helper.execute_query(query,params=(user_id,))
+        return len(result) > 0
 
     def create_budget(self, budget_id, user_id, category, amount, start_date, end_date):
         if not budget_id:
@@ -101,6 +117,7 @@ class BudgetManager:
         if not is_user_logged_in(user_id): # to check if the user has logged in or not
             raise UserNotLoggedInError("User must be logged in to create a budget")
 
+        ### budget_id data validations
         if not budget_id: # To check if the budget_id is empty or not
             raise ValueError("Budget ID cannot be empty.")
 
@@ -111,15 +128,26 @@ class BudgetManager:
             raise
 
         if not self.check_for_duplicate_id(budget_id): # if a budget doesn't exists
-            print("No budget found with this ID.")
-            return
+            raise InvalidDataError("No budget found with this ID.")
 
+        ### user_id Data validation
         if not user_id: # if `user_id` is empty or not
             raise ValueError("User ID cannot be empty.")
+        
+        # Check if the user_id exists in DB
+        if not self.check_user_exists(user_id):
+            raise InvalidDataError("User ID provided doesn't exists!")
+        
+        # Check if the budget_id is associated with user_id
+        if not self.budget_associated_with_user(budget_id=budget_id,user_id=user_id):
+            raise InvalidDataError("User ID not associated with given budget ID")
 
-        if not category: # if `category` is empty or not
+        ### category Data validation
+        # if `category` is empty or not
+        if not category:
             raise ValueError("Budget category cannot be empty.")
 
+        ### amount Data validation
         if not amount: # if `amount` is empty or not
             raise ValueError("Budget amount cannot be empty.")
 
@@ -131,6 +159,7 @@ class BudgetManager:
         except ValueError as e:
             print(f"Error: {e}")
 
+        ### start_date and end_date Data validation
         if not start_date: # if `start_date` is valid or not
             raise ValueError("Start date cannot be empty.")
 
@@ -231,7 +260,8 @@ class BudgetManager:
 
     def view_all_budgets(self, user_id):
         query = """
-            SELECT budget_id, user_id, category, amount, start_date, end_date
+            SELECT budget_id, user_id, category, amount, 
+            TO_CHAR(start_date,'DD-MM-YYYY'), TO_CHAR(end_date,'DD-MM-YYYY')
             FROM budgets
             WHERE user_id = :user_id
         """
