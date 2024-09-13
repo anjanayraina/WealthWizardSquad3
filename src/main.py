@@ -1,6 +1,6 @@
 from .BudgetManager import BudgetManager
 from src.BudgetManagerspark import BudgetManagerSpark
-from ViewBudgetFilters import ViewBudgetFilters
+from .ViewBudgetFilters import ViewBudgetFilters
 from dotenv import load_dotenv
 load_dotenv()
 import os

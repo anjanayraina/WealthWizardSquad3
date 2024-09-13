@@ -3,7 +3,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql.functions import year, col, substring, date_format, sum
 import os
 from dotenv import load_dotenv
-from SparkManager import SparkManager
+from .SparkManager import SparkManager
 from datetime import datetime
 
 load_dotenv()
