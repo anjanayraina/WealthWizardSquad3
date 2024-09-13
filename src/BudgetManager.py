@@ -26,7 +26,7 @@ print(os.getenv("USER_SYSTEM"))
 class BudgetManager:
     def __init__(self):
         self.budgets = {}
-        oracledb.init_oracle_client()
+        # oracledb.init_oracle_client()
         self.db_helper = DBHelper(
             user=os.getenv("USER_SYSTEM"),
             password=os.getenv("PASSWORD"),
@@ -167,10 +167,11 @@ class BudgetManager:
         try: # if `amount` isn't convertible to float
             if amount:
                 amount = float(amount)
-                if amount <= 0:
-                    raise ValueError("Amount must be greater than zero.")
         except ValueError as e:
             raise ValueError("Amount not convertible to float")
+
+        if amount <= 0:
+            raise ValueError("Amount must be greater than zero.")
 
         ### start_date and end_date Data validation
         if not start_date: # if `start_date` is valid or not

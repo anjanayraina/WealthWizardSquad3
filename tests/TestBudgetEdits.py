@@ -281,7 +281,7 @@ class TestBudgetEdits(unittest.TestCase):
         budget_id = 1
         user_id = '101'
         category = "Test_"+'Cat'
-        amount = 0
+        amount = -1500.00
         start_date = "01-09-2024"
         end_date = "01-10-2024"
         with self.assertRaises(Exception) as context:
@@ -293,7 +293,7 @@ class TestBudgetEdits(unittest.TestCase):
                 start_date=start_date,
                 end_date=end_date
             )
-        self.assertEqual(str(context.exception),"Budget amount cannot be empty.")
+        self.assertEqual(str(context.exception),"Amount must be greater than zero.")
 
     
     # Mismatch User ID Test
