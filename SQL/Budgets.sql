@@ -54,7 +54,7 @@ END;
 -- Viewing all budgets
 CREATE OR REPLACE PROCEDURE view_all_budgets (
     p_user_id IN NUMBER,
-    p_budget_id IN NUMBER,
+    p_budget_id IN VARCHAR2,
     p_category OUT VARCHAR2,
     p_amount OUT NUMBER,
     p_start_date OUT DATE,

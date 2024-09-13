@@ -1,4 +1,5 @@
-from .BudgetManager import BudgetManager
+from BudgetManager import BudgetManager
+from ViewBudgetFilters import ViewBudgetFilters
 
 
 if __name__ == "__main__":
@@ -12,7 +13,7 @@ if __name__ == "__main__":
             print("2. Update Budget")
             print("3. Delete Budget")
             print("4. Retrieve Budget")
-            print("5. List Budgets")
+            print("5. View all Budgets")
             print("6. Raise Alert")
             print("7. Exit")
             choice = input("Enter your choice: ")
@@ -41,6 +42,7 @@ if __name__ == "__main__":
             elif choice == '5':
                 user_id = input("Enter user ID: ")
                 manager.view_all_budgets(user_id)
+                view_filters = ViewBudgetFilters(user_id)
             elif choice == '6':
                 manager.raise_alert()
             elif choice == '7':

@@ -37,23 +37,24 @@ class TestViewBudgetManager(unittest.TestCase):
             (rand.randint(0, 100000), 2001, 'Utilities', 300, '15-08-2024', '30-08-2024'),
         ]
 
-        # Insert sample budgets
+        #Insert sample budgets
         for budget in budgets:
             self.manager.create_budget(*budget)
 
         # View all budgets for a specific user
-        self.manager.view_all_budgets(2000)
+        self.manager.view_all_budgets(101)
 
         # Verify the results
         query = "SELECT * FROM budgets WHERE user_id = :1"
-        result = self.db_helper.execute_query(query, params=(2000,))
+        result = self.db_helper.execute_query(query, params=(101,))
 
         self.assertGreater(len(result), 0, "No budgets found for user_id 2000.")
         
         # Assert each budget in result
         for budget in result:
             self.assertEqual(budget[1], 2000)
-            print(f"Verified budget ID {budget[0]} for user_id {budget[1]}.")
+            #print(f"Verified budget ID {budget[0]} for user_id {budget[1]}.")
+        
 
 
 if __name__ == '__main__':

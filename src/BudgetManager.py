@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta
-from .exceptions import UserNotLoggedInError , BudgetAlreadyExistsError
-from .Budget import Budget
-from .utils import is_user_logged_in , budget_already_exists
-from .DBHelper import DBHelper
+from exceptions import UserNotLoggedInError , BudgetAlreadyExistsError
+from Budget import Budget
+from utils import is_user_logged_in , budget_already_exists
+from DBHelper import DBHelper
 from prettytable import PrettyTable
 import os
+import oracledb
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -13,6 +14,7 @@ print(os.getenv("USER_SYSTEM"))
 class BudgetManager:
     def __init__(self):
         self.budgets = {}
+        oracledb.init_oracle_client()
         self.db_helper = DBHelper(
             user=os.getenv("USER_SYSTEM"),
             password=os.getenv("PASSWORD"),
@@ -262,7 +264,9 @@ class BudgetManager:
                 table = PrettyTable()
                 table.field_names = ["Budget Id", "User Id", "Category", "Amount", "Start_date", "End_date"]
                 for budget in result:
-                    table.add_row([budget[0], budget[1], budget[2], budget[3], budget[4], budget[5]])
+                    sdate = budget[4].strftime('%d-%m-%Y')
+                    edate = budget[5].strftime('%d-%m-%Y')
+                    table.add_row([budget[0], budget[1], budget[2], budget[3], sdate, edate])
                 print(table)
         except Exception as e:
             print(f"Error: {e}")
