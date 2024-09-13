@@ -137,8 +137,8 @@ class BudgetManager:
         try: # Check if the `budget_id` is a valid integer or not
             budget_id = int(budget_id)
         except ValueError:
-            print("Budget ID must be an Integer!")
-            raise
+            # print("Budget ID must be an Integer!")
+            raise ValueError("Budget ID must be an Integer!")
 
         if not self.check_for_duplicate_id(budget_id): # if a budget doesn't exists
             raise InvalidDataError("No budget found with this ID.")
@@ -170,7 +170,7 @@ class BudgetManager:
                 if amount <= 0:
                     raise ValueError("Amount must be greater than zero.")
         except ValueError as e:
-            print(f"Error: {e}")
+            raise ValueError("Amount not convertible to float")
 
         ### start_date and end_date Data validation
         if not start_date: # if `start_date` is valid or not
