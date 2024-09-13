@@ -7,7 +7,7 @@ from prettytable import PrettyTable
 from src.BudgetDataProcessor import BudgetDataProcessor
 import os
 from dotenv import load_dotenv
-from .Budget import Budget
+from src.Budget import Budget
 from pyspark.sql.functions import col
 from pyspark.sql.functions import col, when, sum as _sum
 import dash

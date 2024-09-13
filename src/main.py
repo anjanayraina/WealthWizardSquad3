@@ -1,5 +1,5 @@
-from .BudgetManager import BudgetManager
-from .BudgetManagerspark import BudgetManagerSpark
+from src.BudgetManager import BudgetManager
+from src.BudgetManagerspark import BudgetManagerSpark
 from dotenv import load_dotenv
 load_dotenv()
 import os
