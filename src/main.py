@@ -46,13 +46,36 @@ if __name__ == "__main__":
                     print("Invalid choice. Please try again.")
 
             elif choice == '2':
-                budget_id = input("Enter budget ID: ")
                 user_id = input("Enter user ID: ")
+                if not manager.check_user_exists(user_id):
+                    print("User doesn't exists!")
+                    continue
+                
+                budget_id = input("Enter budget ID: ")
+                if not manager.check_for_duplicate_id(budget_id):
+                    print("No budget found with this ID.")
+                    continue
+                
+                query = "SELECT * FROM budgets WHERE user_id = :1 AND budget_id=:2"
+                result = manager.db_helper.execute_query(query,params=(user_id,budget_id))
+                if len(result)==0:
+                    print("Budget not associated with User!")
+                    continue
+                
+                print(f"Existing category name:{result[0][2]}")
                 category = input("Edit budget category: ")
+                if not category:
+                    category = result[0][2]
+                
+                print(f"Existing budget amount:{result[0][3]}")
                 amount = input("Edit budget amount: ")
+                if not amount:
+                    amount = result[0][3]
+                
                 start_date = input("Edit start date (DD-MM-YYYY): ")
                 end_date = input("Edit end date (DD-MM-YYYY): ")
                 manager.edit_budget(budget_id, user_id, category, amount, start_date, end_date)
+
 
             elif choice == '3':
                 budget_id = input("Enter budget ID: ")
