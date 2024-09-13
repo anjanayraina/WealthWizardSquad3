@@ -42,10 +42,7 @@ class TestBudgetManager(unittest.TestCase):
         start_date = '01-08-2024'
         end_date = '21-08-2024'
 
-        with patch('src.is_user_logged_in', return_value=True):
-            with patch('src.budget_already_exists', return_value=False):
-                self.manager.create_budget(budget_id, user_id, category, amount, start_date, end_date)
-
+        self.manager.create_budget(budget_id, user_id, category, amount, start_date, end_date)
         query = "SELECT * FROM budgets WHERE budget_id = :1"
         result = self.db_helper.execute_query(query, params=(budget_id,))
         self.assertEqual(len(result), 1)
@@ -65,10 +62,10 @@ class TestBudgetManager(unittest.TestCase):
         start_date = '01-08-2024'
         end_date = '21-08-2024'
 
-        with patch('src.is_user_logged_in', return_value=True):
-            with self.assertRaises(ValueError) as context:
-                self.manager.create_budget(budget_id, None, category, amount, start_date, end_date)
-            self.assertEqual(str(context.exception), "User ID cannot be empty.")
+
+        with self.assertRaises(ValueError) as context:
+            self.manager.create_budget(budget_id, None, category, amount, start_date, end_date)
+        self.assertEqual(str(context.exception), "User ID cannot be empty.")
 
     def test_create_budget_missing_amount(self):
         budget_id = rand.randint(0, 100000)
@@ -77,10 +74,10 @@ class TestBudgetManager(unittest.TestCase):
         start_date = '01-08-2024'
         end_date = '21-08-2024'
 
-        with patch('src.is_user_logged_in', return_value=True):
-            with self.assertRaises(ValueError) as context:
-                self.manager.create_budget(budget_id, user_id, category, None, start_date, end_date)
-            self.assertEqual(str(context.exception), "Budget amount cannot be empty.")
+        with self.assertRaises(ValueError) as context:
+            self.manager.create_budget(budget_id, user_id, category, None, start_date, end_date)
+
+        self.assertEqual(str(context.exception), "Budget amount cannot be empty.")
 
     def test_create_budget_invalid_amount(self):
         budget_id = rand.randint(0, 100000)
@@ -90,10 +87,10 @@ class TestBudgetManager(unittest.TestCase):
         start_date = '01-08-2024'
         end_date = '21-08-2024'
 
-        with patch('src.utils.is_user_logged_in', return_value=True):
-            with self.assertRaises(ValueError) as context:
-                self.manager.create_budget(budget_id, user_id, category, amount, start_date, end_date)
-            self.assertEqual(str(context.exception), "Please enter a valid number for the amount.")
+
+        with self.assertRaises(ValueError) as context:
+            self.manager.create_budget(budget_id, user_id, category, amount, start_date, end_date)
+        self.assertEqual(str(context.exception), "Please enter a valid number for the amount.")
 
     def test_create_budget_missing_start_date(self):
         budget_id = rand.randint(0, 100000)
@@ -102,10 +99,10 @@ class TestBudgetManager(unittest.TestCase):
         amount = 500
         end_date = '21-08-2024'
 
-        with patch('src.is_user_logged_in', return_value=True):
-            with self.assertRaises(ValueError) as context:
-                self.manager.create_budget(budget_id, user_id, category, amount, None, end_date)
-            self.assertEqual(str(context.exception), "Start date cannot be empty.")
+
+        with self.assertRaises(ValueError) as context:
+            self.manager.create_budget(budget_id, user_id, category, amount, None, end_date)
+        self.assertEqual(str(context.exception), "Start date cannot be empty.")
 
     def test_create_budget_missing_end_date(self):
         budget_id = rand.randint(0, 100000)
@@ -114,10 +111,10 @@ class TestBudgetManager(unittest.TestCase):
         amount = 500
         start_date = '01-08-2024'
 
-        with patch('src.is_user_logged_in', return_value=True):
-            with self.assertRaises(ValueError) as context:
-                self.manager.create_budget(budget_id, user_id, category, amount, start_date, None)
-            self.assertEqual(str(context.exception), "End date cannot be empty.")
+
+        with self.assertRaises(ValueError) as context:
+            self.manager.create_budget(budget_id, user_id, category, amount, start_date, None)
+        self.assertEqual(str(context.exception), "End date cannot be empty.")
 
     def test_create_budget_duplicate_category(self):
         budget_id_1 = rand.randint(0, 100000)
@@ -128,12 +125,11 @@ class TestBudgetManager(unittest.TestCase):
         start_date = '01-08-2024'
         end_date = '21-08-2024'
 
-        with patch('src.is_user_logged_in', return_value=True):
-            with patch('src.budget_already_exists', side_effect=[False, True]):
-                self.manager.create_budget(budget_id_1, user_id, category, amount, start_date, end_date)
-                with self.assertRaises(BudgetAlreadyExistsError) as context:
-                    self.manager.create_budget(budget_id_2, user_id, category, amount, start_date, end_date)
-                self.assertEqual(str(context.exception), "Budget already exists, please enter a new Budget")
+
+        self.manager.create_budget(budget_id_1, user_id, category, amount, start_date, end_date)
+        with self.assertRaises(BudgetAlreadyExistsError) as context:
+            self.manager.create_budget(budget_id_2, user_id, category, amount, start_date, end_date)
+        self.assertEqual(str(context.exception), "Budget already exists, please enter a new Budget")
 
     def test_create_budget_invalid_dates(self):
         budget_id = rand.randint(0, 100000)
@@ -143,11 +139,46 @@ class TestBudgetManager(unittest.TestCase):
         start_date = '21-08-2024'
         end_date = '01-08-2024'
 
-        with patch('src.is_user_logged_in', return_value=True):
-            with patch('src.budget_already_exists', return_value=False):
-                with self.assertRaises(ValueError) as context:
-                    self.manager.create_budget(budget_id, user_id, category, amount, start_date, end_date)
-                self.assertEqual(str(context.exception), "End date must be after the start date.")       
+
+        with self.assertRaises(ValueError) as context:
+            self.manager.create_budget(budget_id, user_id, category, amount, start_date, end_date)
+        self.assertEqual(str(context.exception), "End date must be after the start date.")
+
+    def test_create_budget_missing_budget_id(self):
+        user_id = 2000
+        category = 'Groceries'
+        amount = 500
+        start_date = '01-08-2024'
+        end_date = '21-08-2024'
+
+        with self.assertRaises(ValueError) as context:
+            self.manager.create_budget(None, user_id, category, amount, start_date, end_date)
+        self.assertEqual(str(context.exception), "Budget ID cannot be empty.")
+
+    def test_create_budget_missing_category(self):
+        budget_id = rand.randint(0, 100000)
+        user_id = 2000
+        amount = 500
+        start_date = '01-08-2024'
+        end_date = '21-08-2024'
+
+        with self.assertRaises(ValueError) as context:
+            self.manager.create_budget(budget_id, user_id, None, amount, start_date, end_date)
+        self.assertEqual(str(context.exception), "Budget category cannot be empty.")
+
+    def test_create_budget_invalid_amount_non_numeric(self):
+        budget_id = rand.randint(0, 100000)
+        user_id = 2000
+        category = 'Groceries'
+        amount = "five hundred"  # Non-numeric value
+        start_date = '01-08-2024'
+        end_date = '21-08-2024'
+
+        with self.assertRaises(ValueError) as context:
+            self.manager.create_budget(budget_id, user_id, category, amount, start_date, end_date)
+        self.assertEqual(str(context.exception), "Please enter a valid number for the amount.")
+
+
 
 
 if __name__ == '__main__':

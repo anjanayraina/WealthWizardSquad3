@@ -1,13 +1,16 @@
 import unittest
 from unittest.mock import patch, MagicMock
 from pyspark.sql import SparkSession
-from pyspark.sql.types import StructType, StructField, StringType, DoubleType, DateType
+from pyspark.sql.types import StructType, StructField, StringType, DoubleType, DateType, IntegerType
 from src.BudgetDataProcessor import BudgetDataProcessor
 from src.DBHelper import DBHelper
+from src.exceptions import MissingRequiredColumnsError, InvalidDataError, DatabaseExecutionError
+import datetime
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
+
 class TestBudgetDataProcessor(unittest.TestCase):
 
     @classmethod
@@ -25,44 +28,47 @@ class TestBudgetDataProcessor(unittest.TestCase):
     def tearDownClass(cls):
         cls.spark.stop()
 
-    def test_read_csv(self):
-        schema = StructType([
-            StructField("budget_id", StringType(), True),
-            StructField("user_id", StringType(), True),
-            StructField("category", StringType(), True),
-            StructField("amount", DoubleType(), True),
-            StructField("start_date", StringType(), True),
-            StructField("end_date", StringType(), True)
-        ])
+    def test_read_csv_missing_file(self):
+        with self.assertRaises(InvalidDataError):
+            self.processor.read_csv("non_existent_file.csv")
 
-        df = self.processor.read_csv("../budget_data.csv")
-        df.show()
-    def test_process_data(self):
+    def test_process_data_missing_columns(self):
         data = [
-            ("B001", "U001", "Groceries", 500.0, "2024-08-01", "2024-08-31"),
-            ("B002", "U002", "Utilities", -100.0, "2024-08-01", "2024-08-31"),
-            ("B003", "U003", "Rent", 800.0, "2024-08-31", "2024-08-01"),
-            ("B004", None, "Entertainment", 200.0, "2024-08-01", "2024-08-31")
+            (101, 1001, 500, '01-08-2024', '31-08-2024'),  # Missing 'category' column
         ]
-
         schema = StructType([
-            StructField("budget_id", StringType(), True),
-            StructField("user_id", StringType(), True),
-            StructField("category", StringType(), True),
-            StructField("amount", DoubleType(), True),
+            StructField("budget_id", IntegerType(), True),
+            StructField("user_id", IntegerType(), True),
+            StructField("amount", IntegerType(), True),
             StructField("start_date", StringType(), True),
             StructField("end_date", StringType(), True)
         ])
-
         df = self.spark.createDataFrame(data, schema)
 
-        cleaned_df = self.processor.process_data(df)
+        with self.assertRaises(MissingRequiredColumnsError):
+            self.processor.process_data(df)
 
-        self.assertEqual(cleaned_df.count(), 1)
-        self.assertEqual(cleaned_df.collect()[0]["budget_id"], "B001")
+    def test_process_data_invalid_data(self):
+        data = [
+            (101, 1001, 'Groceries', 500, 'invalid_date', '31-08-2024'),
+        ]
+        schema = StructType([
+            StructField("budget_id", IntegerType(), True),
+            StructField("user_id", IntegerType(), True),
+            StructField("category", StringType(), True),
+            StructField("amount", IntegerType(), True),
+            StructField("start_date", StringType(), True),
+            StructField("end_date", StringType(), True)
+        ])
+        df = self.spark.createDataFrame(data, schema)
 
-    def test_save_to_database(self):
-        data = [("B001", "U001", "Groceries", 500.0, "2024-08-01", "2024-08-31")]
+        with self.assertRaises(InvalidDataError):
+            self.processor.process_data(df)
+
+    def test_save_to_database_error(self):
+        data = [
+            ("1", "1001", "Groceries", 200.0, datetime.date(2024, 8, 1), datetime.date(2024, 8, 31)),
+        ]
         schema = StructType([
             StructField("budget_id", StringType(), True),
             StructField("user_id", StringType(), True),
@@ -72,16 +78,9 @@ class TestBudgetDataProcessor(unittest.TestCase):
             StructField("end_date", DateType(), True)
         ])
         df = self.spark.createDataFrame(data, schema)
-        with patch.object(self.processor.db_helper, 'execute_query') as mock_execute_query:
+
+        # Simulate a database execution error
+        self.mock_db_helper.execute_query.side_effect = Exception("Database error")
+
+        with self.assertRaises(DatabaseExecutionError):
             self.processor.save_to_database(df)
-            self.assertEqual(mock_execute_query.call_count, 1)
-
-    def test_process_and_save(self):
-        csv_file_path = "../budget_data.csv"
-        self.processor.process_and_save(csv_file_path)
-        self.processor.list_all_budgets()
-
-
-
-if __name__ == '__main__':
-    unittest.main()
