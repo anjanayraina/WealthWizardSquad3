@@ -20,7 +20,7 @@ if __name__ == "__main__":
             print("3. Delete Budget")
             print("4. Retrieve Budget")
             print("5. View all Budgets")
-            print("6. Raise Alert")
+            print("6. Visualization")
             print("7. Delete Budget of user_id (spark)")
             print("8. Exit")
             choice = input("Enter your choice: ")
@@ -91,36 +91,24 @@ if __name__ == "__main__":
                 manager.view_all_budgets(user_id)
                 view_filters = ViewBudgetFilters(user_id)
             elif choice == '6':
-                #manager.raise_alert()
-                # Set Python paths to ensure compatibility
-                os.environ['PYSPARK_PYTHON'] = 'C:/Users/91991/AppData/Local/Programs/Python/Python38/python.exe'
-                os.environ['PYSPARK_DRIVER_PYTHON'] = 'C:/Users/91991/AppData/Local/Programs/Python/Python38/python.exe'
                 spark = SparkSession.builder \
                 .appName("Budget Management System") \
                 .config("spark.local.dir", "C:/Users/91991/Desktop/testing") \
                 .config("spark.driver.extraClassPath", "C:/Users/91991/Downloads/WINDOWS.X64_213000_db_home/jdbc/lib/ojdbc8.jar") \
                 .getOrCreate()
 
-                # Database connection details
-                user = "sys as sysdba"  # Specify the user, in this case, SYSDBA for administrative tasks
-                password = "vaibhav1234"  # Password for the database user
-                dsn = "localhost/orcl"  # Data Source Name (DSN) specifying the Oracle database instance
-
-                # Initialize the BudgetManager with SparkSession and database connection details
-                budget_manager = BudgetManager()
-
                 # Process the budget data and retrieve the processed DataFrame
-                processed_data = budget_manager.process_budget_data(spark, user, password,dsn)
+                processed_data = manager.process_budget_data(spark)
 
                 # Create a Dash web application using the processed budget data
-                dash_app = budget_manager.create_dash_app(processed_data)
+                dash_app = manager.create_dash_app(processed_data)
 
                 # Run the Dash web server for the application in debug mode
-                dash_app.run_server(debug=True)
+                dash_app.run_server(debug=True,port=5005)
 
                 # Stop the SparkSession after the application has finished running
                 spark.stop()
-                break
+                #break
                 #To be executed only once, and that is first time when you are executing the code so that the
                 #scheduler is formed in the database and after that there is no need of it as the scheduler would be already there.
                 # Manage Scheduler Jobs
