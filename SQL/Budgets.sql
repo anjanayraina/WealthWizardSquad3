@@ -75,4 +75,80 @@ EXCEPTION
 END;
 /
 
+--For Raising Budget Alerts
+CREATE TABLE expenses (
+    ids            VARCHAR2(1000) PRIMARY KEY,
+    user_id       VARCHAR2(1000) NOT NULL,
+    amount        NUMBER(10, 2) NOT NULL,
+    category_id   VARCHAR2(100) NOT NULL,
+    category_name VARCHAR2(100) NOT NULL,
+    expense_date  TIMESTAMP NOT NULL,
+    descriptions   VARCHAR2(255),
+    is_imported   NUMBER(1)
+);
 
+CREATE OR REPLACE PROCEDURE check_budget_alerts AS
+    CURSOR budget_cursor IS
+        SELECT budget_id, user_id, category, amount, start_date, end_date
+        FROM budgets;
+
+    v_total_expenses NUMBER(10, 2);
+    v_spending NUMBER(10, 2);
+    v_amount NUMBER(10, 2);
+    v_comment VARCHAR2(500);
+    v_budget_id NUMBER;
+    v_user_id VARCHAR2(1000);
+    v_category VARCHAR2(50);
+BEGIN
+    FOR budget_rec IN budget_cursor LOOP
+        v_budget_id := budget_rec.budget_id;
+        v_user_id := budget_rec.user_id;
+        v_category := budget_rec.category;
+        v_amount := budget_rec.amount;
+
+        DBMS_OUTPUT.PUT_LINE('Processing Budget ID: ' || v_budget_id);
+        DBMS_OUTPUT.PUT_LINE('User ID: ' || v_user_id);
+        DBMS_OUTPUT.PUT_LINE('Category: ' || v_category);
+        DBMS_OUTPUT.PUT_LINE('Amount: ' || v_amount);
+
+        -- Calculate total expenses for this budget and category
+        BEGIN
+            SELECT NVL(SUM(e.amount), 0)
+            INTO v_total_expenses
+            FROM expenses e
+            WHERE e.user_id = v_user_id
+              AND e.category_name = v_category
+              AND e.expense_date BETWEEN budget_rec.start_date AND budget_rec.end_date;
+
+            -- Determine the spending status
+            v_spending := v_total_expenses;
+
+            IF v_spending >= v_amount THEN
+                v_comment := 'Budget exceeded!';
+            ELSIF v_spending >= v_amount * 0.9 THEN
+                v_comment := 'Budget limit approaching!';
+            ELSE
+                v_comment := 'Budget is under control.';
+            END IF;
+
+            -- Update the comment in the budgets table
+            BEGIN
+                UPDATE budgets
+                SET comments = v_comment
+                WHERE budget_id = v_budget_id;
+
+                DBMS_OUTPUT.PUT_LINE('Updated budget ID ' || v_budget_id || ' with comment: ' || v_comment);
+            EXCEPTION
+                WHEN OTHERS THEN
+                    DBMS_OUTPUT.PUT_LINE('Error updating budget ID ' || v_budget_id || ': ' || SQLERRM);
+            END;
+        EXCEPTION
+            WHEN OTHERS THEN
+                DBMS_OUTPUT.PUT_LINE('Error calculating expenses for user ID ' || v_user_id || ' and category ' || v_category || ': ' || SQLERRM);
+        END;
+    END LOOP;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error in procedure: ' || SQLERRM);
+END;
+/
