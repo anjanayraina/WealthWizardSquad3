@@ -47,22 +47,25 @@ class DBHelper:
             print("Database connection closed.")
 
 class SchedulerManager:
-    def __init__(self, spark, dsn, user, password):
-        # Initialize the SchedulerManager with Spark session and database connection details
+    def __init__(self, spark):
+        # Initialize the SchedulerManager with Spark session and DBHelper instance
         self.spark = spark  # Spark session for processing data
-        self.dsn = dsn  # Data Source Name for the Oracle database
-        self.user = user  # Username for database authentication
-        self.password = password  # Password for database authentication
+        self.db_helper = self.db_helper = DBHelper(
+            user=os.getenv("USER_SYSTEM"),
+            password=os.getenv("PASSWORD"),
+            host=os.getenv("HOST"),
+            port = os.getenv("PORT"),
+            sid=os.getenv("SID")
+        )
 
     def create_scheduler_job(self):
         print("Creating Scheduler Job...")
         try:
-            # Establish a connection to the Oracle database with SYSDBA privileges
-            connection = cx_Oracle.connect(self.user, self.password, self.dsn, mode=cx_Oracle.SYSDBA)
-            cursor = connection.cursor()
+            # Establish a connection to the Oracle database using DBHelper
+            self.db_helper.connect()
             
-            # Execute the PL/SQL block to create a scheduler job
-            cursor.execute("""
+            # Define the PL/SQL block to create the scheduler job
+            plsql_block = """
                 BEGIN
                     DBMS_SCHEDULER.create_job (
                         job_name        => 'CHECK_BUDGET_ALERTS_JOB',  -- Name of the scheduler job
@@ -73,33 +76,37 @@ class SchedulerManager:
                         enabled         => TRUE  -- Enable the job immediately after creation
                     );
                 END;
-            """)
-            # Close the cursor and connection after successfully creating the job
-            cursor.close()
-            connection.close()
+            """
+
+            # Execute the PL/SQL block using DBHelper
+            self.db_helper.execute_query(plsql_block, commit=True)
             print("Scheduler job created successfully.")
-        except cx_Oracle.DatabaseError as e:
+        except oracledb.DatabaseError as e:
             # Handle any database errors that occur during the job creation
             print(f"Error creating scheduler job: {e}")
+        finally:
+            # Close the DBHelper connection
+            self.db_helper.close()
 
     def drop_scheduler_job(self):
         print("Dropping Scheduler Job...")
         try:
-            # Establish a connection to the Oracle database with SYSDBA privileges
-            connection = cx_Oracle.connect(self.user, self.password, self.dsn, mode=cx_Oracle.SYSDBA)
-            cursor = connection.cursor()
+            # Establish a connection to the Oracle database using DBHelper
+            self.db_helper.connect()
             
-            # Execute the PL/SQL block to drop the existing scheduler job
-            cursor.execute("BEGIN DBMS_SCHEDULER.drop_job(job_name => 'CHECK_BUDGET_ALERTS_JOB'); END;")
-            
-            # Close the cursor and connection after successfully dropping the job
-            cursor.close()
-            connection.close()
+            # Define the PL/SQL block to drop the scheduler job
+            plsql_block = "BEGIN DBMS_SCHEDULER.drop_job(job_name => 'CHECK_BUDGET_ALERTS_JOB'); END;"
+
+            # Execute the PL/SQL block using DBHelper
+            self.db_helper.execute_query(plsql_block, commit=True)
             print("Scheduler job dropped successfully.")
-        except cx_Oracle.DatabaseError as e:
+        except oracledb.DatabaseError as e:
             # Handle any database errors that occur during the job drop process
             print(f"Error dropping scheduler job: {e}")
+        finally:
+            # Close the DBHelper connection
+            self.db_helper.close()
 
     def close(self):
-        # Inform that there is no need to close any persistent connections
+        # No persistent connection is maintained by the SchedulerManager
         print("SchedulerManager does not maintain a persistent connection. No close operation required.")
