@@ -321,33 +321,34 @@ class BudgetManager:
     
 
     #from here on my part is starting   
-    def intialising_variables(self,spark,user,password,budget_dsn):
+    def intialising_variables(self,spark):
         self.spark=spark
-        self.user=user
-        self.password=password
-        self.budget_dsn=budget_dsn
-
 
     def retrieve_budget(self, budget_id):
         try:
-            # Establish a connection to the Oracle database using cx_Oracle
-            connection = cx_Oracle.connect(self.user, self.password, self.budget_dsn, mode=cx_Oracle.SYSDBA)
-            cursor = connection.cursor()
+            # Establish a connection using the DBHelper class
+            self.db_helper.connect()
             print("Connected to budget database.")
-        
+
             # Retrieve budget details for the given budget_id
             print(f"Retrieving budget with ID: {budget_id}")
-            cursor.execute(
+            query = (
                 "SELECT budget_id, user_id, category, amount, start_date, end_date, comments "
-                "FROM budgets WHERE budget_id = :1", [budget_id]
+                "FROM budgets WHERE budget_id = :1"
             )
-            budget_row = cursor.fetchone()  # Fetch the first row of the result
-            cursor.close()
-            connection.close()  # Close the database connection
+            params = [budget_id]
+        
+            # Execute the query using DBHelper's execute_query method
+            result = self.db_helper.execute_query(query, params, commit=False)
+        
+            self.db_helper.close()  # Close the connection after the query
 
-            if budget_row:
-                # If a budget is found, create and return a Budget object with the retrieved data
+            if result:
+                # Fetch the first row from the result
+                budget_row = result[0]
                 print(f"Budget retrieved: {budget_row}")
+            
+                # Create and return a Budget object with the retrieved data
                 return Budget(
                     budget_row[0],  # budget_id
                     budget_row[1],  # user_id
@@ -356,12 +357,13 @@ class BudgetManager:
                     budget_row[4].strftime('%Y-%m-%d'),  # start_date
                     budget_row[5].strftime('%Y-%m-%d'),  # end_date
                     budget_row[6]  # comments
-             )
+                )
             else:
                 # If no budget is found with the provided ID, return None
                 print("No budget found with this ID.")
                 return None
-        except cx_Oracle.DatabaseError as e:
+
+        except oracledb.DatabaseError as e:
             # Handle any database-related errors
             print(f"Error connecting to the database: {e}")
             return None
@@ -369,13 +371,14 @@ class BudgetManager:
     def retrieve_total_expenses(self, user_id, category_name, start_date, end_date):
         print(f"Retrieving total expenses for user ID: {user_id} and category Name: {category_name} between {start_date} and {end_date}")
         try:
+            jdbc_url = f"jdbc:oracle:thin:@{self.db_helper.dsn}"
             # Load expenses from the database into a Spark DataFrame using JDBC
             expenses_df = self.spark.read \
             .format("jdbc") \
-            .option("url", "jdbc:oracle:thin:@localhost:1521/orcl") \
+            .option("url", jdbc_url) \
             .option("dbtable", "expenses") \
-            .option("user", self.user) \
-            .option("password", self.password) \
+            .option("user", self.db_helper.user) \
+            .option("password", self.db_helper.password) \
             .option("driver", "oracle.jdbc.driver.OracleDriver") \
             .option("fetchsize", "500") \
             .option("connectTimeout", "60000") \
@@ -424,20 +427,21 @@ class BudgetManager:
 
     def process_budget_data(self,spark,user,password,budget_dsn):
         #initalizing all the variables first by doing a function call and bringing them from the main.py file
-        self.intialising_variables(spark,user,password,budget_dsn)
-
+        self.intialising_variables(spark)
+        jdbc_url = f"jdbc:oracle:thin:@{self.db_helper.dsn}"
         print("Starting Spark job for budget data processing.")
 
-        # Define the schema for the budgets DataFrame
-        budget_schema = ["budget_id", "user_id", "category", "amount", "start_date", "end_date", "comments"]
+        username_for_spark=self.db_helper.user
+        if self.db_helper.user=="sys":
+            username_for_spark="sys as sysdba"
 
         # Load the budgets from the database into a Spark DataFrame using JDBC
         budget_df = self.spark.read \
         .format("jdbc") \
-        .option("url", "jdbc:oracle:thin:@localhost:1521/orcl") \
+        .option("url", jdbc_url) \
         .option("dbtable", "budgets") \
-        .option("user", self.user) \
-        .option("password", self.password) \
+        .option("user", username_for_spark) \
+        .option("password", self.db_helper.password) \
         .option("driver", "oracle.jdbc.driver.OracleDriver") \
         .option("fetchsize", "500") \
         .option("connectTimeout", "60000") \
@@ -449,10 +453,10 @@ class BudgetManager:
         # Load expenses from the database into a Spark DataFrame using JDBC
         expenses_df = self.spark.read \
             .format("jdbc") \
-            .option("url", "jdbc:oracle:thin:@localhost:1521/orcl") \
+            .option("url", jdbc_url) \
             .option("dbtable", "expenses") \
-            .option("user", self.user) \
-            .option("password", self.password) \
+            .option("user", username_for_spark) \
+            .option("password", self.db_helper.password) \
             .option("driver", "oracle.jdbc.driver.OracleDriver") \
             .option("fetchsize", "500") \
             .option("connectTimeout", "60000") \
