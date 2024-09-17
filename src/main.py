@@ -134,25 +134,25 @@ if __name__ == "__main__":
                 #.config("spark.driver.extraClassPath", "C:\Users\HP\Downloads\ojdbc8.jar") \
 
                 # Process the budget data and retrieve the processed DataFrame
-                #processed_data = manager.process_budget_data(spark)
+                processed_data = manager.process_budget_data(spark)
 
                 # Create a Dash web application using the processed budget data
-                #dash_app = manager.create_dash_app(processed_data)
+                dash_app = manager.create_dash_app(processed_data)
 
                 # Run the Dash web server for the application in debug mode
-                #dash_app.run_server(debug=True,port=5005)
+                dash_app.run_server(debug=True,port=5001)
 
                 # Stop the SparkSession after the application has finished running
-                #spark.stop()
+                spark.stop()
                 #break
                 #To be executed only once, and that is first time when you are executing the code so that the
                 #scheduler is formed in the database and after that there is no need of it as the scheduler would be already there.
                 # Manage Scheduler Jobs
-                scheduler = SchedulerManager(spark)
-                scheduler.create_scheduler_job()  # Create the job to schedule the budget check
+                #scheduler = SchedulerManager(spark)
+                #scheduler.create_scheduler_job()  # Create the job to schedule the budget check
                 #scheduler.drop_scheduler_job()  # Uncomment to drop the job if needed
-                scheduler.close()
-                spark.stop()
+                #scheduler.close()
+                #spark.stop()
             elif choice == '7':
                 jdbc_url = "jdbc:oracle:thin:@localhost:1521:orcl"
                 driver_path = r"C:\Users\HP\Downloads\ojdbc8.jar"

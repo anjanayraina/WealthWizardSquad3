@@ -18,6 +18,7 @@ import plotly.express as px
 import pandas as pd
 import cx_Oracle
 import oracledb
+from pyspark.sql.functions import to_date, date_format
 load_dotenv()
 
 
@@ -436,7 +437,7 @@ class BudgetManager:
         self.intialising_variables(spark)
         jdbc_url = f"jdbc:oracle:thin:@{self.db_helper.dsn}"
         print("Starting Spark job for budget data processing.")
-
+        print(jdbc_url)
         username_for_spark=self.db_helper.user
         if self.db_helper.user=="sys":
             username_for_spark="sys as sysdba"
@@ -518,16 +519,65 @@ class BudgetManager:
         result_df = result_df.withColumn("SPENT", col("SPENT").cast("double"))
         result_df = result_df.withColumn("CATEGORY", col("CATEGORY").cast("string"))
 
+        # Cast BUDGET_ID and other necessary columns to string for consistency
+        result_df = result_df.withColumn("BUDGET_ID", col("BUDGET_ID").cast("string"))
+        result_df = result_df.withColumn("USER_ID", col("USER_ID").cast("string"))
+        result_df = result_df.withColumn("STATUS", col("STATUS").cast("string"))
+        result_df = result_df.withColumn("COMMENTS", col("COMMENTS").cast("string"))
+
+        # Convert timestamps to a consistent format
+        result_df = result_df.withColumn("START_DATE", date_format(col("START_DATE"), 'yyyy-MM-dd HH:mm:ss'))
+        result_df = result_df.withColumn("END_DATE", date_format(col("END_DATE"), 'yyyy-MM-dd HH:mm:ss'))
+
+        # Check for null or invalid timestamps in START_DATE and END_DATE
+        result_df.filter(col("START_DATE").isNull() | col("END_DATE").isNull()).show()
+
+        # Optionally, fill null timestamp values to avoid errors in later steps
+        # You may choose to set default values or handle them appropriately
+        result_df = result_df.fillna({
+        "START_DATE": "1970-01-01 00:00:00", 
+        "END_DATE": "1970-01-01 00:00:00"
+        })
+
+        # Fill null values for other columns to prevent issues during conversion
+        result_df = result_df.fillna({
+                "BUDGET_ID": "", 
+                "USER_ID": "", 
+                "CATEGORY": "", 
+                "STATUS": "", 
+                "COMMENTS": "",
+                "BUDGET_AMOUNT": 0.0, 
+                "SPENT": 0.0
+                })
+
+        result_df.show()
         # Convert the result DataFrame to a Pandas DataFrame for use in Dash
         result_pd_df = result_df.toPandas()
 
+        # Verify data types in Pandas DataFrame
+        print(result_pd_df.dtypes)
+
         # Convert None/NaN values to 0 for plotting purposes
-        result_pd_df['SPENT'] = result_pd_df['SPENT'].fillna(0)
+        # Ensure numeric columns are properly formatted
+        result_pd_df['SPENT'] = result_pd_df['SPENT'].fillna(0).astype(float)
+        result_pd_df['BUDGET_AMOUNT'] = result_pd_df['BUDGET_AMOUNT'].fillna(0).astype(float)
+
+        # Ensure the timestamp columns are properly formatted as Pandas timestamps
+        result_pd_df['START_DATE'] = pd.to_datetime(result_pd_df['START_DATE'], errors='coerce')
+        result_pd_df['END_DATE'] = pd.to_datetime(result_pd_df['END_DATE'], errors='coerce')
+
+        # Fill NaT values in the Pandas DataFrame (if any invalid date conversions occurred)
+        result_pd_df['START_DATE'] = result_pd_df['START_DATE'].fillna(pd.Timestamp("1970-01-01 00:00:00"))
+        result_pd_df['END_DATE'] = result_pd_df['END_DATE'].fillna(pd.Timestamp("1970-01-01 00:00:00"))
+
+        # Print the first few rows to check the data before plotting
+        print(result_pd_df.head())
 
         return result_pd_df
 
     def create_dash_app(self, processed_data):
         # Initialize a Dash app instance
+        os.environ.pop("PORT", None)
         app = dash.Dash(__name__)
 
         # Ensure column names are in uppercase for consistency
@@ -562,7 +612,6 @@ class BudgetManager:
 
         # Run the Dash app on the specified host and port
         return app
-
 
 
 
