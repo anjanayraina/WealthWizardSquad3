@@ -42,7 +42,18 @@ class BudgetManagerSpark:
 
     def fetch_budgets(self, user_id):
         try:
-            sql_query = f"SELECT * FROM budgets WHERE user_id = '{user_id}'"
+           # sql_query = f"SELECT budget_id,CAST(user_id AS VARCHAR) AS user_id, ,category,amount FROM budgets WHERE user_id = '{user_id}'"
+            sql_query = f"""
+                SELECT 
+                    budget_id, 
+                    TO_CHAR(user_id) AS user_id, 
+                    category, 
+                    TO_NUMBER(amount) AS amount 
+                FROM 
+                    budgets 
+                WHERE 
+                    user_id = '{user_id}'
+            """
             df = self.spark.read \
                 .format("jdbc") \
                 .option("url", self.jdbc_url) \
@@ -52,7 +63,11 @@ class BudgetManagerSpark:
                 .option("driver", self.connection_properties["driver"]) \
                 .load()
 
-            return df
+            formatted_df = df \
+                .withColumn("amount", F.format_number(F.col("amount"), 2)) \
+                .withColumn("budget_id", F.format_number(F.col("budget_id"), 2))
+
+            return formatted_df
         except Exception as e:
             print(f"Error while fetching budgets: {e}")
             raise
@@ -83,8 +98,13 @@ class BudgetManagerSpark:
                 .option("driver", self.connection_properties["driver"]) \
                 .load()
 
-            print("Remaining records in budgets table:")
-            remaining_df.show()
+            # Formatting the 'amount' and 'budget_id' columns
+            formatted_df = remaining_df \
+                .withColumn("amount", F.format_number(F.col("amount"), 2)) \
+                .withColumn("budget_id", F.format_number(F.col("budget_id"), 2))
+
+            print("Remaining records in budgets table with formatted columns:")
+            formatted_df.show()
         except Exception as e:
             print(f"Error while reading remaining data from Oracle: {e}")
             raise

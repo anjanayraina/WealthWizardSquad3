@@ -41,8 +41,10 @@ class TestBudgetManager(unittest.TestCase):
         amount = 500
         start_date = '01-08-2024'
         end_date = '21-08-2024'
-
-        self.manager.create_budget(budget_id, user_id, category, amount, start_date, end_date)
+        comments = "NA"
+        alert_threshold = 1
+        alert_prefrence = "NA"
+        self.manager.create_budget(budget_id, user_id, category, amount, start_date, end_date , comments , alert_threshold , alert_prefrence)
         query = "SELECT * FROM budgets WHERE budget_id = :1"
         result = self.db_helper.execute_query(query, params=(budget_id,))
         self.assertEqual(len(result), 1)

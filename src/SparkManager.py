@@ -10,7 +10,7 @@ class SparkManager:
 
     driver = "oracle.jdbc.driver.OracleDriver" # JDBC Driver
 
-    def __init__(self,user,password,host,port,sid,path_to_jdbc = r".\ojdbc8-21.5.0.0.jar"):
+    def __init__(self,user,password,host,port,sid,path_to_jdbc = r"C:\Users\HP\Downloads\ojdbc8.jar"):
         """
             Used to initialize the SparkSession
             Arguments:

@@ -27,7 +27,7 @@ print(os.getenv("USER_SYSTEM"))
 class BudgetManager:
     def __init__(self):
         self.budgets = {}
-        # oracledb.init_oracle_client()
+        oracledb.init_oracle_client()
         self.db_helper = DBHelper(
             user=os.getenv("USER_SYSTEM"),
             password=os.getenv("PASSWORD"),
@@ -66,7 +66,8 @@ class BudgetManager:
         result = self.db_helper.execute_query(query,params=(user_id,))
         return len(result) > 0
 
-    def create_budget(self, budget_id, user_id, category, amount, start_date, end_date):
+    def create_budget(self, budget_id, user_id, category, amount, start_date, end_date, comments = "NA", alert_threshold = 1,
+                      alert_preference = "NA"):
         if not budget_id:
             raise ValueError("Budget ID cannot be empty.")
         if not user_id:
@@ -96,15 +97,19 @@ class BudgetManager:
         if datetime.strptime(end_date, '%d-%m-%Y') <= datetime.strptime(start_date, '%d-%m-%Y'):
             raise ValueError("End date must be after the start date.")
 
+        start_date_oracle = datetime.strptime(start_date, '%d-%m-%Y').strftime('%d-%b-%Y').upper()
+        end_date_oracle = datetime.strptime(end_date, '%d-%m-%Y').strftime('%d-%b-%Y').upper()
+
         query = """
             BEGIN
-                create_budget_proc(:1, :2, :3, :4, :5, :6);
+                create_budget_proc(:1, :2, :3, :4, :5, :6, :7, :8, :9);
             END;
         """
-        params = (budget_id, user_id, category, amount, start_date, end_date)
+        params = (budget_id, user_id, category, amount, start_date_oracle, end_date_oracle, comments, alert_threshold,
+                  alert_preference)
         self.db_helper.execute_query(query, params, commit=True)
         self.budgets[budget_id] = Budget(budget_id, user_id, category, amount, start_date, end_date)
-
+    
     def _validate_date(self, date_str):
         if isinstance(date_str, datetime):
             date_str = date_str.strftime('%d-%m-%Y')
@@ -426,7 +431,7 @@ class BudgetManager:
         elif budget.notification_method == 'email':
             print(f"Sending email alert: {alert_message}")  # Simulate sending an email alert
 
-    def process_budget_data(self,spark,user,password,budget_dsn):
+    def process_budget_data(self,spark):
         #initalizing all the variables first by doing a function call and bringing them from the main.py file
         self.intialising_variables(spark)
         jdbc_url = f"jdbc:oracle:thin:@{self.db_helper.dsn}"
