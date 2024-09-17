@@ -4,6 +4,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 from .SparkManager import SparkManager
 from pyspark.sql.functions import when, col, lit, to_date
+from pyspark.sql.types import IntegerType
 from .utils import is_user_logged_in, budget_already_exists
 from .exceptions import UserNoAccessError, UserNotLoggedInError, BudgetAlreadyExistsError
 
@@ -36,7 +37,9 @@ class BudgetEditor:
         Loads the `budgets` Oracle SQL Table using JDBC driver as a Pyspark Dataframe  
         """
         self.budget_df = self.sparkManager.read_data("budgets")
-        self.budget_df.show()
+        self.budget_df = self.budget_df.withColumn("budget_id",self.budget_df["budget_id"].cast(IntegerType()))
+        # self.budget_df.printSchema()
+        # self.budget_df.show()
 
     def check_for_budget_id(self,budget_id):
         """
@@ -150,7 +153,11 @@ class BudgetEditor:
         """
         response = re.get(f"{CURRENCY_EXCHANGE_URL}{source_curr}.json").json()
         currency_df = self.budget_df.withColumn(f"{target_curr.upper()} Amount",self.budget_df["amount"]*response[source_curr][target_curr])
-        currency_df.show()
+        self.currency_df = currency_df
+    
+    def show_curr_df_for_user(self,budget_id):
+        self.currency_df.filter(self.currency_df.budget_id == budget_id).\
+            drop("comments","alert_threshold","alert_preference").show()
 
     def close_session(self):
         """
@@ -167,9 +174,8 @@ if __name__ == "__main__":
                                     "Groceries",3030,"20-08-2024","20-09-2024")
         budget_editor.currency_exchange()
     except Exception as e:
-        raise
-    finally:
         budget_editor.close_session()
+        raise
 
 # [x] Develop logic to handle updates in budget data.
     # - edit_budget_df function

@@ -1,6 +1,7 @@
 from .BudgetManager import BudgetManager
 from src.BudgetManagerspark import BudgetManagerSpark
 from .ViewBudgetFilters import ViewBudgetFilters
+from .BudgetEditor import BudgetEditor
 from dotenv import load_dotenv
 load_dotenv()
 import os
@@ -18,7 +19,7 @@ if __name__ == "__main__":
             print("1. Create Budget")
             print("2. Update Budget")
             print("3. Delete Budget")
-            print("4. Retrieve Budget")
+            print("4. Convert currency")
             print("5. View all Budgets")
             print("6. Visualization")
             print("7. Delete Budget of user_id (spark)")
@@ -48,43 +49,71 @@ if __name__ == "__main__":
                     print("Invalid choice. Please try again.")
 
             elif choice == '2':
-                user_id = input("Enter user ID: ")
-                if not manager.check_user_exists(user_id):
-                    print("User doesn't exists!")
-                    continue
-                
-                budget_id = input("Enter budget ID: ")
-                if not manager.check_for_duplicate_id(budget_id):
-                    print("No budget found with this ID.")
-                    continue
-                
-                query = "SELECT * FROM budgets WHERE user_id = :1 AND budget_id=:2"
-                result = manager.db_helper.execute_query(query,params=(user_id,budget_id))
-                if len(result)==0:
-                    print("Budget not associated with User!")
-                    continue
-                
-                print(f"Existing category name:{result[0][2]}")
-                category = input("Edit budget category: ")
-                if not category:
-                    category = result[0][2]
-                
-                print(f"Existing budget amount:{result[0][3]}")
-                amount = input("Edit budget amount: ")
-                if not amount:
-                    amount = result[0][3]
-                
-                start_date = input("Edit start date (DD-MM-YYYY): ")
-                end_date = input("Edit end date (DD-MM-YYYY): ")
-                manager.edit_budget(budget_id, user_id, category, amount, start_date, end_date)
-
+                try:
+                    user_id = input("Enter user ID: ")
+                    if not manager.check_user_exists(user_id):
+                        print("User doesn't exists!")
+                        continue
+                    
+                    budget_id = input("Enter budget ID: ")
+                    if not manager.check_for_duplicate_id(budget_id):
+                        print("No budget found with this ID.")
+                        continue
+                    
+                    query = "SELECT * FROM budgets WHERE user_id = :1 AND budget_id=:2"
+                    result = manager.db_helper.execute_query(query,params=(user_id,budget_id))
+                    if len(result)==0:
+                        print("Budget not associated with User!")
+                        continue
+                    
+                    print(f"Existing category name:{result[0][2]}")
+                    category = input("Edit budget category: ")
+                    if not category:
+                        category = result[0][2]
+                    
+                    print(f"Existing budget amount:{result[0][3]}")
+                    amount = input("Edit budget amount: ")
+                    if not amount:
+                        amount = result[0][3]
+                    
+                    start_date = input("Edit start date (DD-MM-YYYY): ")
+                    end_date = input("Edit end date (DD-MM-YYYY): ")
+                    manager.edit_budget(budget_id, user_id, category, amount, start_date, end_date)
+                except Exception as e:
+                    print(e)
 
             elif choice == '3':
                 budget_id = input("Enter budget ID: ")
                 manager.delete_budget(budget_id)
 
             elif choice == '4':
-                manager.get_budget()
+                try:
+                    budget_editor = BudgetEditor()
+                    budget_editor.read_budget_df()
+                    user_id = input("Enter user ID: ")
+                    if not manager.check_user_exists(user_id):
+                        print("User doesn't exists!")
+                        continue
+                    
+                    budget_id = input("Enter budget ID: ")
+                    if not manager.check_for_duplicate_id(budget_id):
+                        print("No budget found with this ID.")
+                        continue
+                    
+                    query = "SELECT * FROM budgets WHERE user_id = :1 AND budget_id=:2"
+                    result = manager.db_helper.execute_query(query,params=(user_id,budget_id))
+                    if len(result)==0:
+                        print("Budget not associated with User!")
+                        continue
+
+                    print("Supported currency list: USD, INR, AUD, GBP, CHF")
+                    curr_type = input("Enter the currency type for conversion: ")
+                    budget_editor.currency_exchange(target_curr=curr_type.lower())
+                    budget_editor.show_curr_df_for_user(int(budget_id))
+                    budget_editor.close_session()
+                    
+                except Exception as e:
+                    print(e)
 
             elif choice == '5':
                 user_id = input("Enter user ID: ")

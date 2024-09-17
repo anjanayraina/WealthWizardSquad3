@@ -198,7 +198,7 @@ class TestBudgetEdits(unittest.TestCase):
         budget_id = 1
         user_id = '101'
         category = "Test_"+'Cat'
-        amount = '1500.00s'
+        amount = '1500abcd'
         start_date = "01-09-2024"
         end_date = "01-10-2024"
         with self.assertRaises(Exception) as context:
