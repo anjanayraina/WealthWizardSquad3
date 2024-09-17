@@ -1,6 +1,6 @@
 import oracledb
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import year, col, substring, date_format, sum, month
+from pyspark.sql.functions import year, col, substring, date_format, sum, month, to_date
 import os
 from dotenv import load_dotenv
 from .SparkManager import SparkManager
@@ -30,11 +30,10 @@ class ViewBudgetFilters:
             self.stop_spark_session()
 
     def apply_filters(self, budget_df: DataFrame, user_id):
-        budget_df = (budget_df.withColumn("START_BUDGET_DATE", date_format("START_DATE", "yyyy-MM-dd"))
-                             .withColumn("END_BUDGET_DATE", date_format("END_DATE", "yyyy-MM-dd"))
-                             .withColumn("BUDGET_ID", col("BUDGET_ID").cast("int"))
-                             .withColumn("USER_ID", col("USER_ID").cast("int"))
-                             .drop("START_DATE", "END_DATE"))
+        budget_df = (budget_df.withColumn("START_BUDGET_DATE", to_date(col("START_DATE"), "yyyy-MM-dd"))
+                       .withColumn("END_BUDGET_DATE", to_date(col("END_DATE"), "yyyy-MM-dd"))
+                       .withColumn("BUDGET_ID", col("BUDGET_ID").cast("int"))
+                       .drop("START_DATE", "END_DATE"))
 
         try:
             # Get and validate budget year
@@ -98,7 +97,7 @@ class ViewBudgetFilters:
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
 
-    def filter_by_year(self, df, year_value: int, user_id: int):
+    def filter_by_year(self, df, year_value: int, user_id: str):
         filtered_df = df.filter(
             ((year(df['START_BUDGET_DATE']) == year_value) | (year(df['END_BUDGET_DATE']) == year_value)) & 
             (df['USER_ID'] == user_id)
@@ -110,7 +109,7 @@ class ViewBudgetFilters:
 
 
 
-    def filter_by_month(self, df, month_value: int, user_id: int):
+    def filter_by_month(self, df, month_value: int, user_id: str):
         input_month = int(month_value)
         # Filter data where the input month is between the months of START_BUDGET_DATE and END_BUDGET_DATE
         filtered_df = df.filter(
@@ -124,7 +123,7 @@ class ViewBudgetFilters:
 
 
 
-    def filter_by_amount_range(self, df, min_amount: float, max_amount: float, user_id: int):
+    def filter_by_amount_range(self, df, min_amount: float, max_amount: float, user_id: str):
         if df is None:
             raise ValueError("DataFrame is None")
         filtered_df = df.filter((col('AMOUNT') >= min_amount) & (col('AMOUNT') <= max_amount) & (df['USER_ID'] == user_id))
@@ -134,7 +133,7 @@ class ViewBudgetFilters:
         return filtered_df
 
 
-    def filter_by_category(self, df, category_value: str, user_id: int):
+    def filter_by_category(self, df, category_value: str, user_id: str):
         if df is None:
             raise ValueError("DataFrame is None")
         filtered_df = df.filter((col('CATEGORY') == category_value) & (df['USER_ID'] == user_id))
@@ -144,7 +143,7 @@ class ViewBudgetFilters:
         return filtered_df
 
 
-    def grp_sum_by_category(self, df, user_id: int):
+    def grp_sum_by_category(self, df, user_id: str):
         if df is None:
             raise ValueError("DataFrame is None")
         summary_df = df.filter(col('USER_ID') == user_id).groupBy('CATEGORY').agg(format_number(sum('AMOUNT'), 2).alias('TOTAL_AMOUNT'))
