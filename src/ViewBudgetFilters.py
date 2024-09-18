@@ -11,7 +11,7 @@ load_dotenv()
 
 class ViewBudgetFilters:
     def __init__(self,id):
-        oracledb.init_oracle_client()
+        #oracledb.init_oracle_client()
         self.spark_manager = SparkManager(
             user=os.getenv("USER_SYSTEM"),
             password=os.getenv("PASSWORD"),

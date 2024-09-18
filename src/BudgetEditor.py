@@ -2,11 +2,11 @@ import os
 import requests as re
 from datetime import datetime
 from dotenv import load_dotenv
-from SparkManager import SparkManager
+from src.SparkManager import SparkManager
 from pyspark.sql.functions import when, col, lit, to_date
 from pyspark.sql.types import IntegerType
-from utils import is_user_logged_in
-from exceptions import  UserNotLoggedInError
+from src.utils import is_user_logged_in
+from src.exceptions import  UserNotLoggedInError
 
 CURRENCY_EXCHANGE_URL = "https://latest.currency-api.pages.dev/v1/currencies/"
 
