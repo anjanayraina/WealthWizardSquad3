@@ -30,18 +30,37 @@ class BudgetDataProcessor:
             raise InvalidDataError(f"Error reading CSV file at {file_path}: {str(e)}")
 
     def process_data(self, df):
-        required_columns = ["user_id", "category", "amount", "start_date", "end_date", "budget_id"]
+        # Include the new columns 'comments', 'alert_threshold', and 'alert_preference'
+        required_columns = ["user_id", "category", "amount", "start_date", "end_date", "budget_id", "comments",
+                            "alert_threshold", "alert_preference"]
         missing_columns = [col for col in required_columns if col not in df.columns]
 
         if missing_columns:
             raise MissingRequiredColumnsError(missing_columns)
 
         try:
+            # Drop rows with missing values in required columns
             df = df.na.drop(subset=required_columns)
+
+            # Filter out invalid amounts (e.g., amounts <= 0)
             df = df.filter(col("amount") > 0)
+
+            # Convert start_date and end_date from 'dd-MM-yyyy' to date type
             df = df.withColumn("start_date", to_date(col("start_date"), "dd-MM-yyyy"))
             df = df.withColumn("end_date", to_date(col("end_date"), "dd-MM-yyyy"))
+
+            # Filter to ensure that end_date is greater than start_date
             df = df.filter(col("end_date") > col("start_date"))
+
+            # Handle missing or default values for 'comments', 'alert_threshold', and 'alert_preference'
+            # Fill missing or null values in 'comments' with 'NA'
+            df = df.fillna({'comments': 'NA'})
+
+            # Fill missing or null values in 'alert_threshold' with 1 and ensure it's cast as integer
+            df = df.fillna({'alert_threshold': 1}).withColumn("alert_threshold", col("alert_threshold").cast("int"))
+
+            # Fill missing or null values in 'alert_preference' with 'NA'
+            df = df.fillna({'alert_preference': 'NA'})
 
             return df
         except Exception as e:
@@ -52,11 +71,13 @@ class BudgetDataProcessor:
             for row in df.collect():
                 query = """
                     BEGIN
-                        create_budget_proc(:1, :2, :3, :4, :5, :6);
+                        create_budget_proc(:1, :2, :3, :4, :5, :6, :7, :8, :9);
                     END;
                 """
-                start_date = row['start_date'].strftime('%d-%m-%Y')
-                end_date = row['end_date'].strftime('%d-%m-%Y')
+
+                # Convert date formats to 'DD-MON-YYYY' format for Oracle
+                start_date = row['start_date'].strftime('%d-%b-%Y').upper()
+                end_date = row['end_date'].strftime('%d-%b-%Y').upper()
 
                 params = (
                     row['budget_id'],
@@ -64,7 +85,10 @@ class BudgetDataProcessor:
                     row['category'],
                     row['amount'],
                     start_date,
-                    end_date
+                    end_date,
+                    row['comments'] if 'comments' in row else 'NA',  # Handle missing value
+                    row['alert_threshold'] if 'alert_threshold' in row else 1,  # Handle missing value
+                    row['alert_preference'] if 'alert_preference' in row else 'NA'  # Handle missing value
                 )
                 self.db_helper.execute_query(query, params, commit=True)
         except Exception as e:
