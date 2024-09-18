@@ -1,29 +1,41 @@
--- Create budgets table
+
+----Anjanay's Procedure-----
 CREATE TABLE budgets (
-    budget_id     NUMBER PRIMARY KEY,
-    user_id       VARCHAR2(1000) NOT NULL,
-    category      VARCHAR2(50),
-    amount        NUMBER(10, 2),
-    start_date    DATE,
-    end_date      DATE
+    budget_id NUMBER PRIMARY KEY,
+    user_id VARCHAR2(1000) NOT NULL,
+    category VARCHAR2(100) NOT NULL,
+    amount NUMBER NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    comments VARCHAR2(500),        
+    alert_threshold NUMBER,         
+    alert_preference VARCHAR2(50) 
 );
 
--- Creating a budget
-CREATE OR REPLACE PROCEDURE create_budget_proc(
-    p_budget_id IN budgets.budget_id%TYPE,
-    p_user_id IN budgets.user_id%TYPE,
-    p_category IN budgets.category%TYPE,
-    p_amount IN budgets.amount%TYPE,
-    p_start_date IN budgets.start_date%TYPE,
-    p_end_date IN budgets.end_date%TYPE
-)
-IS BEGIN
-    INSERT INTO budgets (budget_id, user_id, category, amount, start_date, end_date)
-VALUES (p_budget_id, p_user_id, p_category, p_amount, TO_DATE(p_start_date, 'DD-MM-YYYY'), TO_DATE(p_end_date, 'DD-MM-YYYY'));
-END create_budget_proc;
-/
 
--- Editing a budget
+CREATE OR REPLACE PROCEDURE create_budget_proc (
+    p_budget_id       IN NUMBER,
+    p_user_id         IN VARCHAR2,
+    p_category        IN VARCHAR2,
+    p_amount          IN NUMBER,
+    p_start_date      IN DATE,
+    p_end_date        IN DATE,
+    p_comments        IN VARCHAR2,  
+    p_alert_threshold IN NUMBER,   
+    p_alert_preference IN VARCHAR2  
+)
+IS
+BEGIN
+    INSERT INTO budgets (
+        budget_id, user_id, category, amount, start_date, end_date, comments, alert_threshold, alert_preference
+    ) VALUES (
+        p_budget_id, p_user_id, p_category, p_amount, p_start_date, p_end_date, p_comments, p_alert_threshold, p_alert_preference
+    );
+END create_budget_proc;
+
+select * from budgets;
+
+------Hariharan's Procedure-----
 CREATE OR REPLACE PROCEDURE edit_budget_proc(
     p_budget_id IN budgets.budget_id%TYPE,
     p_user_id IN budgets.user_id%TYPE,
@@ -37,10 +49,12 @@ IS BEGIN
     SET budgets.category = p_category, budgets.amount = p_amount, budgets.start_date = TO_DATE(p_start_date,'DD-MM-YYYY'), budgets.end_date = TO_DATE(p_end_date,'DD-MM-YYYY')
     WHERE budgets.budget_id = p_budget_id AND budgets.user_id = p_user_id;
 END edit_budget_proc;
-/
 
--- Deleting budget procedure
-CREATE OR REPLACE PROCEDURE delete_budget(p_budget_id IN NUMBER) IS
+
+
+
+----Pritha' Procedure------
+CREATE OR REPLACE PROCEDURE delete_budget_proc(p_budget_id IN NUMBER) IS
 BEGIN
     DELETE FROM budgets WHERE budget_id = p_budget_id;
     IF SQL%ROWCOUNT = 0 THEN
@@ -51,7 +65,9 @@ BEGIN
     
 END;
 
--- Viewing all budgets
+
+
+-------Saloni's Procedure--------
 CREATE OR REPLACE PROCEDURE view_all_budgets (
     p_user_id IN NUMBER,
     p_budget_id IN VARCHAR2,
@@ -73,20 +89,9 @@ EXCEPTION
         p_start_date := NULL;
         p_end_date := NULL;
 END;
-/
 
---For Raising Budget Alerts
-CREATE TABLE expenses (
-    ids            VARCHAR2(1000) PRIMARY KEY,
-    user_id       VARCHAR2(1000) NOT NULL,
-    amount        NUMBER(10, 2) NOT NULL,
-    category_id   VARCHAR2(100) NOT NULL,
-    category_name VARCHAR2(100) NOT NULL,
-    expense_date  TIMESTAMP NOT NULL,
-    descriptions   VARCHAR2(255),
-    is_imported   NUMBER(1)
-);
 
+---------Vaibhav's Procedure-----
 CREATE OR REPLACE PROCEDURE check_budget_alerts AS
     CURSOR budget_cursor IS
         SELECT budget_id, user_id, category, amount, start_date, end_date
@@ -151,4 +156,3 @@ EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Error in procedure: ' || SQLERRM);
 END;
-/
