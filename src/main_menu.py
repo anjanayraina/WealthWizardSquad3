@@ -1,18 +1,4 @@
-import subprocess
-
-def run_main_module():
-    try:
-        # Run the command using subprocess
-        result = subprocess.run(['python', '-m', 'src.main'], check=True, capture_output=True, text=True)
-        
-        # Output the result
-        print("Output:\n", result.stdout)
-        print("Error (if any):\n", result.stderr)
-        
-    except subprocess.CalledProcessError as e:
-        print(f"An error occurred while running the command: {e}")
-
-
+import os
 
 def main():
     while(True):
@@ -38,7 +24,7 @@ def main():
                 #call group 2's main
                 pass
             elif choice==3:
-                run_main_module()
+                os.system('python -m src.main')
             elif choice==4:
                 #call group 4's main
                 pass
