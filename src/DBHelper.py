@@ -1,5 +1,4 @@
 import oracledb
-import cx_Oracle
 import os
 class DBHelper:
     def __init__(self, user, password, host, port, sid):

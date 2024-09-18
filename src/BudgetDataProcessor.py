@@ -1,7 +1,6 @@
 import os
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, to_date
-from pyspark.sql.types import DoubleType
 from src.DBHelper import DBHelper
 from src.exceptions import MissingRequiredColumnsError, InvalidDataError, DatabaseExecutionError
 from dotenv import load_dotenv

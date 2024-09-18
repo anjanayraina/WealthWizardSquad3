@@ -66,7 +66,7 @@ class TestBudgetManager(unittest.TestCase):
 
 
         with self.assertRaises(ValueError) as context:
-            self.manager.create_budget(budget_id, None, category, amount, start_date, end_date)
+            self.manager.create_budget(budget_id, None, category, amount, start_date, end_date )
         self.assertEqual(str(context.exception), "User ID cannot be empty.")
 
     def test_create_budget_missing_amount(self):
@@ -77,7 +77,7 @@ class TestBudgetManager(unittest.TestCase):
         end_date = '21-08-2024'
 
         with self.assertRaises(ValueError) as context:
-            self.manager.create_budget(budget_id, user_id, category, None, start_date, end_date)
+            self.manager.create_budget(budget_id, user_id, category, None, start_date, end_date )
 
         self.assertEqual(str(context.exception), "Budget amount cannot be empty.")
 
@@ -179,8 +179,6 @@ class TestBudgetManager(unittest.TestCase):
         with self.assertRaises(ValueError) as context:
             self.manager.create_budget(budget_id, user_id, category, amount, start_date, end_date)
         self.assertEqual(str(context.exception), "Please enter a valid number for the amount.")
-
-
 
 
 if __name__ == '__main__':

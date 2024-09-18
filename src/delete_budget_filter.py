@@ -3,7 +3,6 @@ import jaydebeapi
 import jpype
 findspark.init()
 from pyspark.sql import SparkSession
-from pyspark.sql import functions as F
 
 # Initialize SparkSession
 try:

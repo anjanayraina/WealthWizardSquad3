@@ -1,34 +1,26 @@
-from datetime import datetime, timedelta
-from .exceptions import UserNotLoggedInError , BudgetAlreadyExistsError, InvalidDataError
-from .Budget import Budget
-from .utils import is_user_logged_in , budget_already_exists
-from .DBHelper import DBHelper
+from datetime import datetime
+from src.exceptions import UserNotLoggedInError , BudgetAlreadyExistsError, InvalidDataError
+from src.utils import is_user_logged_in
+from src.DBHelper import DBHelper
 from prettytable import PrettyTable
 from src.BudgetDataProcessor import BudgetDataProcessor
 import os
-import oracledb
 from dotenv import load_dotenv
 from src.Budget import Budget
-from pyspark.sql.functions import col
 from pyspark.sql.functions import col, when, sum as _sum
 import dash
 from dash import dcc, html
-from dash.dependencies import Input, Output
 import plotly.express as px
 import pandas as pd
-import cx_Oracle
 import oracledb
-from pyspark.sql.functions import to_date, date_format
+from pyspark.sql.functions import  date_format
 load_dotenv()
 
-
-
-print(os.getenv("USER_SYSTEM"))
 
 class BudgetManager:
     def __init__(self):
         self.budgets = {}
-        oracledb.init_oracle_client()
+#        oracledb.init_oracle_client()
         self.db_helper = DBHelper(
             user=os.getenv("USER_SYSTEM"),
             password=os.getenv("PASSWORD"),
@@ -67,50 +59,102 @@ class BudgetManager:
         result = self.db_helper.execute_query(query,params=(user_id,))
         return len(result) > 0
 
-    def create_budget(self, budget_id, user_id, category, amount, start_date, end_date, comments = "NA", alert_threshold = 1,
-                      alert_preference = "NA"):
+    def create_budget(self, budget_id, user_id, category, amount, start_date, end_date, comments="default_comment",
+                      alert_threshold=1, alert_preference="console"):
+        """
+        Creates a budget entry with the provided details and stores it in the database.
+
+        Args:
+        - budget_id: Unique identifier for the budget.
+        - user_id: The ID of the user who owns the budget.
+        - category: Category of the budget (e.g., groceries, rent).
+        - amount: Budget amount in numerical format.
+        - start_date: Budget start date in DD-MM-YYYY format.
+        - end_date: Budget end date in DD-MM-YYYY format.
+        - comments: Optional comments for the budget.
+        - alert_threshold: Threshold for triggering alerts (default is 1).
+        - alert_preference: User's alert preference (e.g., email or console).
+
+        Raises:
+        - ValueError: If any required parameter is missing or invalid.
+        - UserNotLoggedInError: If the user is not logged in.
+        - BudgetAlreadyExistsError: If the budget ID already exists in the database.
+        """
+
+        # Validate that budget_id is provided, raise an error if it's missing
         if not budget_id:
             raise ValueError("Budget ID cannot be empty.")
+
+        # Validate that user_id is provided, raise an error if it's missing
         if not user_id:
             raise ValueError("User ID cannot be empty.")
+
+        # Validate that category is provided, raise an error if it's missing
         if not category:
             raise ValueError("Budget category cannot be empty.")
+
+        # Validate that amount is provided, raise an error if it's missing
         if not amount:
             raise ValueError("Budget amount cannot be empty.")
+
+        # Ensure the user is logged in before proceeding with the budget creation
         if not is_user_logged_in(user_id):
             raise UserNotLoggedInError("User must be logged in to create a budget")
 
+        # Check if a budget with the same ID already exists to avoid duplicates
         if self.check_for_duplicate_id(budget_id):
             raise BudgetAlreadyExistsError("Budget already exists, please enter a new Budget")
 
+        # Validate and ensure that the amount is a valid positive number
         try:
-            amount = float(amount)
+            amount = float(amount)  # Attempt to convert the amount to a float
             if amount <= 0:
-                raise ValueError("Amount must be greater than zero.")
+                raise ValueError(
+                    "Amount must be greater than zero.")  # Raise error if the amount is less than or equal to zero
         except ValueError:
-            raise ValueError("Please enter a valid number for the amount.")
+            raise ValueError(
+                "Please enter a valid number for the amount.")  # Raise error if the amount cannot be converted
+
+        # Ensure start_date is provided
         if not start_date:
             raise ValueError("Start date cannot be empty.")
+
+        # Validate the start date format (DD-MM-YYYY)
         self._validate_date(start_date)
+
+        # Ensure end_date is provided
         if not end_date:
             raise ValueError("End date cannot be empty.")
+
+        # Validate the end date format (DD-MM-YYYY)
         self._validate_date(end_date)
+
+        # Ensure that the end date is after the start date, raise an error otherwise
         if datetime.strptime(end_date, '%d-%m-%Y') <= datetime.strptime(start_date, '%d-%m-%Y'):
             raise ValueError("End date must be after the start date.")
 
+        # Convert the start date to Oracle's expected date format (DD-MON-YYYY)
         start_date_oracle = datetime.strptime(start_date, '%d-%m-%Y').strftime('%d-%b-%Y').upper()
+
+        # Convert the end date to Oracle's expected date format (DD-MON-YYYY)
         end_date_oracle = datetime.strptime(end_date, '%d-%m-%Y').strftime('%d-%b-%Y').upper()
 
+        # Prepare the SQL query for the stored procedure to create a new budget entry in the database
         query = """
             BEGIN
                 create_budget_proc(:1, :2, :3, :4, :5, :6, :7, :8, :9);
             END;
         """
+
+        # Create a tuple of parameters to be passed to the stored procedure
         params = (budget_id, user_id, category, amount, start_date_oracle, end_date_oracle, comments, alert_threshold,
                   alert_preference)
+
+        # Execute the query with the provided parameters and commit the transaction to the database
         self.db_helper.execute_query(query, params, commit=True)
-        self.budgets[budget_id] = Budget(budget_id, user_id, category, amount, start_date, end_date)
-    
+
+        # Store the created budget in the local budget dictionary for reference
+
     def _validate_date(self, date_str):
         if isinstance(date_str, datetime):
             date_str = date_str.strftime('%d-%m-%Y')
