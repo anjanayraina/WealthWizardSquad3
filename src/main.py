@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 import os
 from pyspark.sql import SparkSession
+import random
 
 if __name__ == "__main__":
 
@@ -16,11 +17,11 @@ if __name__ == "__main__":
             print("\nBudget Manager")
             print("1. Create Budget")
             print("2. Update Budget")
-            print("3. Delete Budget")
-            print("4. Convert currency")
-            print("5. View all Budgets")
-            print("6. Visualization")
-            print("7. Delete Budget of user_id (spark)")
+            print("3. Convert currency")
+            print("4. Delete Budget(Quickly deletes if u remember ur budget_id)")
+            print("5. Delete Budget of user_id (if u don't remember ur budget_id)")
+            print("6. View all Budgets")
+            print("7. Visualization")
             print("8. Exit")
             choice = input("Enter your choice: ")
 
@@ -31,7 +32,14 @@ if __name__ == "__main__":
                 sub_choice = input("Enter your choice (1 or 2): ")
 
                 if sub_choice == '1':
-                    budget_id = input("Enter budget ID: ")
+                    budget_id = random.randint(1,int(1e5))
+                    
+                    while manager.check_for_duplicate_id(budget_id):
+                        budget_id = random.randint(1,int(1e5))
+                    budget_id = str(budget_id)
+                    
+                    print("budget_id",budget_id)
+
                     user_id = input("Enter user ID: ")
                     category = input("Enter budget category: ")
                     amount = input("Enter budget amount: ")
@@ -52,6 +60,8 @@ if __name__ == "__main__":
                     if not manager.check_user_exists(user_id):
                         print("User doesn't exists!")
                         continue
+
+                    manager.view_all_budgets(user_id)
                     
                     budget_id = input("Enter budget ID: ")
                     if not manager.check_for_duplicate_id(budget_id):
@@ -64,7 +74,9 @@ if __name__ == "__main__":
                         print("Budget not associated with User!")
                         continue
                     
+                    print("\nYou can just press enter if you don't wish to edit the fields\n")
                     print(f"Existing category name:{result[0][2]}")
+
                     category = input("Edit budget category: ")
                     if not category:
                         category = result[0][2]
@@ -74,17 +86,27 @@ if __name__ == "__main__":
                     if not amount:
                         amount = result[0][3]
                     
+                    print(f"Existing start date: {result[0][4].strftime("%d-%m-%Y")}")
                     start_date = input("Edit start date (DD-MM-YYYY): ")
+                    if not start_date:
+                        start_date = result[0][4].strftime("%d-%m-%Y")
+
+                    print(f"Existing end date: {result[0][5].strftime("%d-%m-%Y")}")
                     end_date = input("Edit end date (DD-MM-YYYY): ")
+                    if not end_date:
+                        end_date = result[0][5].strftime("%d-%m-%Y")
+
                     manager.edit_budget(budget_id, user_id, category, amount, start_date, end_date)
                 except Exception as e:
                     print(e)
 
-            elif choice == '3':
+
+
+            elif choice == '4':
                 budget_id = input("Enter budget ID: ")
                 manager.delete_budget(budget_id)
 
-            elif choice == '4':
+            elif choice == '3':
                 try:
                     budget_editor = BudgetEditor()
                     budget_editor.read_budget_df()
@@ -93,6 +115,8 @@ if __name__ == "__main__":
                         print("User doesn't exists!")
                         continue
                     
+                    manager.view_all_budgets(user_id)
+
                     budget_id = input("Enter budget ID: ")
                     if not manager.check_for_duplicate_id(budget_id):
                         print("No budget found with this ID.")
@@ -113,11 +137,11 @@ if __name__ == "__main__":
                 except Exception as e:
                     print(e)
 
-            elif choice == '5':
+            elif choice == '6':
                 user_id = input("Enter user ID: ")
                 manager.view_all_budgets(user_id)
                 view_filters = ViewBudgetFilters(user_id)
-            elif choice == '6':
+            elif choice == '7':
                 # spark = SparkSession.builder \
                 # .appName("Budget Management System") \
                 # .config("spark.local.dir", r"C:\Users\HP\Desktop\testingvaibhav") \
@@ -150,7 +174,7 @@ if __name__ == "__main__":
                 #scheduler.drop_scheduler_job()  # Uncomment to drop the job if needed
                 #scheduler.close()
                 #spark.stop()
-            elif choice == '7':
+            elif choice == '5':
                 jdbc_url = "jdbc:oracle:thin:@localhost:1521:orcl"
                 driver_path = r"C:\Users\HP\Downloads\ojdbc8.jar"
                 oracle_user = os.getenv("USER_SYSTEM")  # default value provided

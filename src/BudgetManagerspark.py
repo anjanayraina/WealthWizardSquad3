@@ -65,7 +65,7 @@ class BudgetManagerSpark:
 
             formatted_df = df \
                 .withColumn("amount", F.format_number(F.col("amount"), 2)) \
-                .withColumn("budget_id", F.format_number(F.col("budget_id"), 2))
+                .withColumn("budget_id", F.col("BUDGET_ID").cast("int"))
 
             return formatted_df
         except Exception as e:
@@ -101,7 +101,7 @@ class BudgetManagerSpark:
             # Formatting the 'amount' and 'budget_id' columns
             formatted_df = remaining_df \
                 .withColumn("amount", F.format_number(F.col("amount"), 2)) \
-                .withColumn("budget_id", F.format_number(F.col("budget_id"), 2))
+                .withColumn("budget_id", F.col("BUDGET_ID").cast("int"))
 
             print("Remaining records in budgets table with formatted columns:")
             formatted_df.show()

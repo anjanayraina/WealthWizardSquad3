@@ -1,4 +1,5 @@
 from datetime import datetime
+import random
 from src.exceptions import UserNotLoggedInError , BudgetAlreadyExistsError, InvalidDataError
 from src.utils import is_user_logged_in
 from src.DBHelper import DBHelper
@@ -335,7 +336,14 @@ class BudgetManager:
                 print(f"No budgets found for user ID {user_id}.")
                 print("Let's create a new budget.")
                 try:
-                    budget_id = input("Enter budget ID: ")
+                    #budget_id = input("Enter budget ID: ")
+                    budget_id = random.randint(1,int(1e5))
+                    
+                    while self.check_for_duplicate_id(budget_id):
+                        budget_id = random.randint(1,int(1e5))
+                    budget_id = str(budget_id)
+                    
+                    print("budget_id",budget_id)
                     category = input("Enter category: ")
                     amount = input("Enter amount: ")
                     start_date = input("Enter start date (DD-MM-YYYY): ")
@@ -481,7 +489,7 @@ class BudgetManager:
         self.intialising_variables(spark)
         jdbc_url = f"jdbc:oracle:thin:@{self.db_helper.dsn}"
         print("Starting Spark job for budget data processing.")
-        print(jdbc_url)
+        #print(jdbc_url)
         username_for_spark=self.db_helper.user
         if self.db_helper.user=="sys":
             username_for_spark="sys as sysdba"
@@ -599,7 +607,7 @@ class BudgetManager:
         result_pd_df = result_df.toPandas()
 
         # Verify data types in Pandas DataFrame
-        print(result_pd_df.dtypes)
+        #print(result_pd_df.dtypes)
 
         # Convert None/NaN values to 0 for plotting purposes
         # Ensure numeric columns are properly formatted
