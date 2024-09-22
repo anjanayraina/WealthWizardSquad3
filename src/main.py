@@ -38,7 +38,7 @@ if __name__ == "__main__":
                         budget_id = random.randint(1,int(1e5))
                     budget_id = str(budget_id)
                     
-                    print("budget_id",budget_id)
+                    print("Budget with ID : ",budget_id , " created.")
 
                     user_id = input("Enter user ID: ")
                     category = input("Enter budget category: ")

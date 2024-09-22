@@ -31,8 +31,7 @@ class BudgetDataProcessor:
 
     def process_data(self, df):
         # Include the new columns 'comments', 'alert_threshold', and 'alert_preference'
-        required_columns = ["user_id", "category", "amount", "start_date", "end_date", "budget_id", "comments",
-                            "alert_threshold", "alert_preference"]
+        required_columns = ["user_id", "category", "amount", "start_date", "end_date", "budget_id"]
         missing_columns = [col for col in required_columns if col not in df.columns]
 
         if missing_columns:
